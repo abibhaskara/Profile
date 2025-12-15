@@ -1602,14 +1602,12 @@ a {
   /* ~18rem, golden proportional */
   gap: 26px;
   /* 16 * 1.618 ≈ 26 */
-  padding: 0 26px;
 }
 
 @media (max-width: 1024px) {
   .bento-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 20px;
-    padding: 0 20px;
   }
 }
 
@@ -1618,7 +1616,6 @@ a {
     grid-template-columns: 1fr;
     grid-auto-rows: 320px;
     gap: 16px;
-    padding: 0 16px;
   }
 }
 
