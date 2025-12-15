@@ -1762,38 +1762,21 @@ a {
   -webkit-line-clamp: 3;
 }
 
-/* Navigate Button */
-.bento-footer {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.bento-navigate {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 20px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border: none;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 700;
-  color: #0a0a0a;
-  cursor: pointer;
+/* Read More - Hover Only */
+.bento-read-more {
+  display: inline-block;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  opacity: 0;
+  transform: translateY(10px);
   transition: all 0.3s ease;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  margin-top: 12px;
 }
 
-.bento-navigate:hover {
-  background: var(--accent);
-  border-color: var(--accent);
-}
-
-.bento-navigate svg {
-  width: 14px;
-  height: 14px;
+.bento-card:hover .bento-read-more {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 /* Skeleton */

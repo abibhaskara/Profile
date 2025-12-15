@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FaGithub } from 'react-icons/fa';
-import { HiArrowRight, HiMapPin } from 'react-icons/hi2';
+import { HiArrowRight } from 'react-icons/hi2';
 import { Link } from 'react-router-dom';
 import { useBlogPosts } from '../hooks/useBlogPosts';
 
@@ -39,11 +39,7 @@ const BentoCard = ({ post, size = 'normal', index }) => {
                     <div className="bento-info">
                         <h3>{post.title}</h3>
                         <p>{post.description}</p>
-                        <div className="bento-footer">
-                            <button className="bento-navigate">
-                                <HiMapPin /> Read Article
-                            </button>
-                        </div>
+                        <span className="bento-read-more">Read More →</span>
                     </div>
                 </div>
             </Link>
