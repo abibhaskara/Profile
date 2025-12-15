@@ -41,19 +41,16 @@ router.post('/', async (req, res) => {
 });
 
 // PUT update post
-router.put('/:id', async (req, res) => {
+router.put('/:slug', async (req, res) => {
     try {
-        const id = parseInt(req.params.id, 10);
-        if (isNaN(id)) {
-            return res.status(400).json({ error: 'Invalid ID' });
-        }
+        const { slug } = req.params;
 
-        // Remove id from body to avoid overwriting
+        // Remove id and createdAt from body to avoid overwriting
         const { id: bodyId, createdAt, ...updateData } = req.body;
 
         const updatedPost = await db.update(posts)
             .set(updateData)
-            .where(eq(posts.id, id))
+            .where(eq(posts.slug, slug))
             .returning();
 
         if (!updatedPost.length) {
@@ -66,13 +63,10 @@ router.put('/:id', async (req, res) => {
 });
 
 // DELETE post
-router.delete('/:id', async (req, res) => {
+router.delete('/:slug', async (req, res) => {
     try {
-        const id = parseInt(req.params.id, 10);
-        if (isNaN(id)) {
-            return res.status(400).json({ error: 'Invalid ID' });
-        }
-        await db.delete(posts).where(eq(posts.id, id));
+        const { slug } = req.params;
+        await db.delete(posts).where(eq(posts.slug, slug));
         res.status(204).send();
     } catch (error) {
         res.status(500).json({ error: error.message });
