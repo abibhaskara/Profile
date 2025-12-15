@@ -15,6 +15,7 @@ const AdminPage = () => {
         image: '',
         tags: ''
     });
+    const [originalSlug, setOriginalSlug] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
 
     // API base URL - use relative path for production, localhost for dev
@@ -46,6 +47,7 @@ const AdminPage = () => {
             image: '',
             tags: ''
         });
+        setOriginalSlug(null);
         setIsEditing(false);
     };
 
@@ -54,6 +56,7 @@ const AdminPage = () => {
             ...post,
             tags: typeof post.tags === 'string' ? JSON.parse(post.tags).join(', ') : post.tags
         });
+        setOriginalSlug(post.slug);
         setIsEditing(true);
     };
 
@@ -74,7 +77,7 @@ const AdminPage = () => {
 
         const method = formData.id ? 'PUT' : 'POST';
         const url = formData.id
-            ? `${API_BASE}/${formData.slug}`
+            ? `${API_BASE}/${originalSlug || formData.slug}`
             : API_BASE;
 
         try {
