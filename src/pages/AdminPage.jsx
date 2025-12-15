@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { motion } from 'framer-motion';
-import { HiPlus, HiPencil, HiTrash, HiCheck, HiXMark } from 'react-icons/hi2';
+import { HiPlus, HiPencil, HiTrash, HiCheck, HiXMark, HiCloudArrowUp } from 'react-icons/hi2';
 
 const AdminPage = () => {
     const [posts, setPosts] = useState([]);
@@ -15,6 +15,7 @@ const AdminPage = () => {
         image: '',
         tags: ''
     });
+    const [isUploading, setIsUploading] = useState(false);
 
     // API base URL - use relative path for production, localhost for dev
     const API_BASE = import.meta.env.DEV ? 'http://localhost:3001/api/posts' : '/api/posts';
@@ -93,6 +94,62 @@ const AdminPage = () => {
         } catch (error) {
             console.error(error);
             alert('Error saving post');
+        }
+    };
+
+    // Image upload handler
+    const handleImageUpload = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+            alert('Please select an image file');
+            return;
+        }
+
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+            alert('Image size must be less than 5MB');
+            return;
+        }
+
+        setIsUploading(true);
+
+        try {
+            // Convert to base64
+            const reader = new FileReader();
+            reader.onload = async () => {
+                const base64 = reader.result;
+
+                const UPLOAD_URL = import.meta.env.DEV
+                    ? 'http://localhost:3001/api/upload'
+                    : '/api/upload';
+
+                const res = await fetch(UPLOAD_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: base64 })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    setFormData(prev => ({ ...prev, image: data.url }));
+                } else {
+                    const error = await res.json();
+                    alert('Upload failed: ' + (error.message || 'Unknown error'));
+                }
+                setIsUploading(false);
+            };
+            reader.onerror = () => {
+                alert('Failed to read file');
+                setIsUploading(false);
+            };
+            reader.readAsDataURL(file);
+        } catch (error) {
+            console.error('Upload error:', error);
+            alert('Upload failed');
+            setIsUploading(false);
         }
     };
 
@@ -452,14 +509,60 @@ const AdminPage = () => {
 
                         <div style={styles.formRow}>
                             <div style={styles.formGroup}>
-                                <label style={styles.label}>Image URL</label>
-                                <input
-                                    type="text"
-                                    style={styles.input}
-                                    value={formData.image}
-                                    onChange={e => setFormData({ ...formData, image: e.target.value })}
-                                    placeholder="https://example.com/image.jpg"
-                                />
+                                <label style={styles.label}>Image</label>
+                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                    <input
+                                        type="text"
+                                        style={{ ...styles.input, flex: 1 }}
+                                        value={formData.image}
+                                        onChange={e => setFormData({ ...formData, image: e.target.value })}
+                                        placeholder="URL or upload image"
+                                    />
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleImageUpload}
+                                        style={{ display: 'none' }}
+                                        id="image-upload"
+                                    />
+                                    <motion.label
+                                        htmlFor="image-upload"
+                                        style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '6px',
+                                            padding: '12px 16px',
+                                            background: isUploading ? 'rgba(255,255,255,0.05)' : 'var(--accent)',
+                                            color: 'white',
+                                            borderRadius: '12px',
+                                            fontSize: '14px',
+                                            fontWeight: '500',
+                                            cursor: isUploading ? 'wait' : 'pointer',
+                                            whiteSpace: 'nowrap'
+                                        }}
+                                        whileHover={!isUploading ? { scale: 1.02 } : {}}
+                                        whileTap={!isUploading ? { scale: 0.98 } : {}}
+                                    >
+                                        <HiCloudArrowUp size={18} />
+                                        {isUploading ? 'Uploading...' : 'Upload'}
+                                    </motion.label>
+                                </div>
+                                {formData.image && (
+                                    <div style={{ marginTop: '12px' }}>
+                                        <img
+                                            src={formData.image}
+                                            alt="Preview"
+                                            style={{
+                                                maxWidth: '200px',
+                                                maxHeight: '120px',
+                                                borderRadius: '8px',
+                                                border: '1px solid var(--border)',
+                                                objectFit: 'cover'
+                                            }}
+                                            onError={(e) => e.target.style.display = 'none'}
+                                        />
+                                    </div>
+                                )}
                             </div>
                             <div style={styles.formGroup}>
                                 <label style={styles.label}>Tags (comma separated)</label>
