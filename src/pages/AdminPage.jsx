@@ -57,9 +57,9 @@ const AdminPage = () => {
         setIsEditing(true);
     };
 
-    const handleDelete = async (id) => {
+    const handleDelete = async (slug) => {
         if (!confirm('Are you sure you want to delete this post?')) return;
-        await fetch(`${API_BASE}/${id}`, { method: 'DELETE' });
+        await fetch(`${API_BASE}/${slug}`, { method: 'DELETE' });
         fetchPosts();
     };
 
@@ -74,7 +74,7 @@ const AdminPage = () => {
 
         const method = formData.id ? 'PUT' : 'POST';
         const url = formData.id
-            ? `${API_BASE}/${formData.id}`
+            ? `${API_BASE}/${formData.slug}`
             : API_BASE;
 
         try {
@@ -447,7 +447,7 @@ const AdminPage = () => {
                                         </motion.button>
                                         <motion.button
                                             style={styles.deleteButton}
-                                            onClick={() => handleDelete(post.id)}
+                                            onClick={() => handleDelete(post.slug)}
                                             whileHover={{ background: 'rgba(239, 68, 68, 0.25)' }}
                                             whileTap={{ scale: 0.98 }}
                                         >
