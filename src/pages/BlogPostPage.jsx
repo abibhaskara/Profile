@@ -114,33 +114,55 @@ const BlogPostPage = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
+            transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
         >
             {/* Hero Image */}
-            <div className="post-hero-image">
-                <img
+            <motion.div
+                className="post-hero-image"
+                initial={{ opacity: 0, scale: 1.05 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
+            >
+                <motion.img
                     src={post.image}
                     alt={post.title}
                     loading="lazy"
                     decoding="async"
                     onLoad={() => setImageLoaded(true)}
+                    initial={{ scale: 1.1 }}
+                    animate={{ scale: 1 }}
+                    transition={{ duration: 1.2, ease: [0.25, 0.46, 0.45, 0.94] }}
                     style={{
                         opacity: imageLoaded ? 1 : 0,
-                        transition: 'opacity 0.3s ease-in-out'
+                        transition: 'opacity 0.5s ease-in-out'
                     }}
                 />
-                <div className="post-overlay"></div>
+                <div className="post-overlay" />
                 <div className="container post-hero-content">
                     <motion.button
                         onClick={() => navigate('/blog')}
                         className="back-button"
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.5, delay: 0.3 }}
                         whileHover={{ x: -4 }}
                         whileTap={{ scale: 0.95 }}
                     >
                         <HiArrowLeft /> Back to Blog
                     </motion.button>
-                    <h1>{post.title}</h1>
-                    <div className="post-meta">
+                    <motion.h1
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+                    >
+                        {post.title}
+                    </motion.h1>
+                    <motion.div
+                        className="post-meta"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.5, delay: 0.4 }}
+                    >
                         <span className="meta-item">
                             <HiCalendar />
                             {new Date(post.createdAt * 1000).toLocaleDateString('en-US', {
@@ -161,15 +183,20 @@ const BlogPostPage = () => {
                                 }
                             })()}
                         </span>
-                    </div>
+                    </motion.div>
                 </div>
-            </div>
+            </motion.div>
 
-            <div className="container post-body-container">
+            <motion.div
+                className="container post-body-container"
+                initial={{ opacity: 0, y: 40 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
+            >
                 <article className="post-content">
                     <ReactMarkdown>{post.content}</ReactMarkdown>
                 </article>
-            </div>
+            </motion.div>
         </motion.div>
     );
 };
