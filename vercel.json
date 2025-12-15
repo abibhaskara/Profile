@@ -7,6 +7,10 @@
             "handle": "filesystem"
         },
         {
+            "src": "/api/posts/([^/]+)",
+            "dest": "/api/posts/[slug]"
+        },
+        {
             "src": "/api/(.*)",
             "dest": "/api/$1"
         },
