@@ -1584,18 +1584,24 @@ a {
 }
 
 /* ===== Bento Grid Layout ===== */
+/* Golden Ratio: 1.618 - Base unit 16px */
 .bento-grid {
   max-width: 1200px;
   margin: 0 auto;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  grid-auto-rows: 280px;
-  gap: 20px;
+  grid-auto-rows: 290px;
+  /* ~18rem, golden proportional */
+  gap: 26px;
+  /* 16 * 1.618 ≈ 26 */
+  padding: 0 26px;
 }
 
 @media (max-width: 1024px) {
   .bento-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    padding: 0 20px;
   }
 }
 
@@ -1603,15 +1609,28 @@ a {
   .bento-grid {
     grid-template-columns: 1fr;
     grid-auto-rows: 320px;
+    gap: 16px;
+    padding: 0 16px;
   }
 }
 
-/* Bento Card Base */
+/* Bento Card Base - Consistent Hover */
 .bento-card {
   position: relative;
   border-radius: 20px;
   overflow: hidden;
   cursor: pointer;
+  border: 2px solid transparent;
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+/* Hover: Outline + Move Up */
+.bento-card:hover {
+  transform: translateY(-8px);
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
 }
 
 .bento-link {
