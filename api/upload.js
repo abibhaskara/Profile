@@ -1,5 +1,6 @@
 /* Abi Bhaskara copyright 2025 */
 import { v2 as cloudinary } from 'cloudinary';
+import { setCorsHeaders, handlePreflight } from './_lib/cors.js';
 
 export const config = {
     api: {
@@ -10,14 +11,8 @@ export const config = {
 };
 
 export default async function handler(req, res) {
-    // Set CORS headers
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
-    }
+    setCorsHeaders(res, ['POST', 'OPTIONS']);
+    if (handlePreflight(req, res)) return;
 
     if (req.method !== 'POST') {
         return res.status(405).json({ error: 'Method not allowed' });
@@ -36,14 +31,9 @@ export default async function handler(req, res) {
         const apiSecret = process.env.CLOUDINARY_API_SECRET;
 
         if (!cloudName || !apiKey || !apiSecret) {
+            console.error('Cloudinary config missing:', { hasCloudName: !!cloudName, hasApiKey: !!apiKey, hasApiSecret: !!apiSecret });
             return res.status(500).json({
-                error: 'Cloudinary not configured',
-                message: 'Missing environment variables',
-                debug: {
-                    hasCloudName: !!cloudName,
-                    hasApiKey: !!apiKey,
-                    hasApiSecret: !!apiSecret
-                }
+                error: 'Upload service not configured'
             });
         }
 

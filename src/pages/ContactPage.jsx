@@ -170,8 +170,8 @@ const ContactPage = () => {
                         </motion.button>
                     </motion.form>
                 </div>
-            </div >
-        </div >
+            </div>
+        </div>
     );
 };
 

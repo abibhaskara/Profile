@@ -21,12 +21,10 @@ export const useBlogPosts = () => {
                 if (!response.ok) throw new Error('Failed to fetch posts');
                 const data = await response.json();
 
-                // Format data to match previous structure
+                // Parse tags from JSON string, keep other fields as-is
                 const formatted = data.map(post => ({
                     ...post,
-                    body: post.content, // Map content to body for BlogPostPage
-                    tags: typeof post.tags === 'string' ? JSON.parse(post.tags) : post.tags,
-                    date: new Date(post.createdAt) // Ensure date object
+                    tags: typeof post.tags === 'string' ? JSON.parse(post.tags) : post.tags
                 }));
 
                 setPosts(formatted);

@@ -1,23 +1,20 @@
 /* Abi Bhaskara copyright 2025 */
 import { db, posts } from '../_lib/db.js';
 import { eq } from 'drizzle-orm';
+import { setCorsHeaders, handlePreflight } from '../_lib/cors.js';
 
 export default async function handler(req, res) {
-    // Enable CORS
-    res.setHeader('Access-Control-Allow-Credentials', 'true');
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET,PUT,DELETE,OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
-    }
+    setCorsHeaders(res, ['GET', 'PUT', 'DELETE', 'OPTIONS']);
+    if (handlePreflight(req, res)) return;
 
     const { slug } = req.query;
 
+    if (!slug) {
+        return res.status(400).json({ error: 'Slug parameter is required' });
+    }
+
     try {
         if (req.method === 'GET') {
-            // GET single post by slug
             const post = await db.select().from(posts).where(eq(posts.slug, slug)).limit(1);
             if (!post.length) {
                 return res.status(404).json({ error: 'Post not found' });
@@ -26,7 +23,6 @@ export default async function handler(req, res) {
         }
 
         if (req.method === 'PUT') {
-            // PUT update post by slug
             const { id: bodyId, createdAt, ...updateData } = req.body;
             const updatedPost = await db.update(posts)
                 .set(updateData)
@@ -40,7 +36,6 @@ export default async function handler(req, res) {
         }
 
         if (req.method === 'DELETE') {
-            // DELETE post by slug
             await db.delete(posts).where(eq(posts.slug, slug));
             return res.status(204).end();
         }
@@ -48,6 +43,7 @@ export default async function handler(req, res) {
         return res.status(405).json({ error: 'Method not allowed' });
     } catch (error) {
         console.error('API Error:', error);
-        return res.status(500).json({ error: error.message });
+        return res.status(500).json({ error: 'Internal server error' });
     }
 }
+
