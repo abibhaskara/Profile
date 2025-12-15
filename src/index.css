@@ -468,23 +468,25 @@ a {
 
 .hero-subtitle {
   text-align: right;
-  /* Changed from left to right for mobile side-by-side */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
 }
 
-/* @media (min-width: 768px) {
-  .hero-subtitle {
-    text-align: right;
-  }
-} Removed redundant media query */
+.hero-label {
+  font-size: 13px;
+  font-family: monospace;
+  color: var(--accent);
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
 
-.hero-subtitle h2 {
+.hero-role {
   font-size: clamp(1.5rem, 4vw, 2.5rem);
   font-weight: 700;
-  line-height: 1.2;
-}
-
-.hero-subtitle span {
-  color: var(--text-muted);
+  line-height: 1.1;
+  color: var(--text-primary);
 }
 
 /* ===== Section Label ===== */

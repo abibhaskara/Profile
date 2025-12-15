@@ -123,10 +123,8 @@ const ProfilePage = ({ isAppLoading = false }) => {
                                 }
                             }}
                         >
-                            <h2>
-                // Tech Enthusiast <br />
-                                <span>Student Researcher</span>
-                            </h2>
+                            <span className="hero-label">// Tech Enthusiast</span>
+                            <h2 className="hero-role">Student Researcher</h2>
                         </motion.div>
                     </div>
                 </motion.div>
