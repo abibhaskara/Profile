@@ -143,7 +143,7 @@ const BlogPostPage = () => {
                     <div className="post-meta">
                         <span className="meta-item">
                             <HiCalendar />
-                            {new Date(post.date).toLocaleDateString('en-US', {
+                            {new Date(post.createdAt * 1000).toLocaleDateString('en-US', {
                                 year: 'numeric',
                                 month: 'long',
                                 day: 'numeric'
@@ -152,7 +152,14 @@ const BlogPostPage = () => {
                         <span className="meta-divider">•</span>
                         <span className="meta-item">
                             <HiTag />
-                            {Array.isArray(post.tags) ? post.tags.join(', ') : post.tags}
+                            {(() => {
+                                try {
+                                    const parsedTags = typeof post.tags === 'string' ? JSON.parse(post.tags) : post.tags;
+                                    return Array.isArray(parsedTags) ? parsedTags.join(', ') : parsedTags;
+                                } catch {
+                                    return post.tags;
+                                }
+                            })()}
                         </span>
                     </div>
                 </div>
@@ -160,7 +167,7 @@ const BlogPostPage = () => {
 
             <div className="container post-body-container">
                 <article className="post-content">
-                    <ReactMarkdown>{post.body}</ReactMarkdown>
+                    <ReactMarkdown>{post.content}</ReactMarkdown>
                 </article>
             </div>
         </motion.div>
