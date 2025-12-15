@@ -24,7 +24,7 @@ export default async function handler(req, res) {
             // POST create new post
             const newPost = await db.insert(posts).values({
                 ...req.body,
-                createdAt: new Date(),
+                createdAt: Math.floor(Date.now() / 1000),
             }).returning();
             return res.status(201).json(newPost[0]);
         }
