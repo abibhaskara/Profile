@@ -30,7 +30,7 @@ export default async function handler(req, res) {
                 description: description || '',
                 image: image || '',
                 tags: tags || '[]',
-                createdAt: Math.floor(Date.now() / 1000),
+                createdAt: new Date(),
             }).returning();
 
             return res.status(201).json(newPost[0]);

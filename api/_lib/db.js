@@ -12,7 +12,7 @@ export const posts = sqliteTable('posts', {
     description: text('description'),
     image: text('image'),
     tags: text('tags'),
-    createdAt: integer('created_at').notNull(),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 });
 
 // Create Turso client
