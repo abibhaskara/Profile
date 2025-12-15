@@ -1,13 +1,6 @@
 /* Abi Bhaskara copyright 2025 */
 import { v2 as cloudinary } from 'cloudinary';
 
-// Configure Cloudinary
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET
-});
-
 export const config = {
     api: {
         bodyParser: {
@@ -38,17 +31,28 @@ export default async function handler(req, res) {
         }
 
         // Check if credentials are configured
-        if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+        const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+        const apiKey = process.env.CLOUDINARY_API_KEY;
+        const apiSecret = process.env.CLOUDINARY_API_SECRET;
+
+        if (!cloudName || !apiKey || !apiSecret) {
             return res.status(500).json({
                 error: 'Cloudinary not configured',
                 message: 'Missing environment variables',
                 debug: {
-                    hasCloudName: !!process.env.CLOUDINARY_CLOUD_NAME,
-                    hasApiKey: !!process.env.CLOUDINARY_API_KEY,
-                    hasApiSecret: !!process.env.CLOUDINARY_API_SECRET
+                    hasCloudName: !!cloudName,
+                    hasApiKey: !!apiKey,
+                    hasApiSecret: !!apiSecret
                 }
             });
         }
+
+        // Configure Cloudinary inside handler
+        cloudinary.config({
+            cloud_name: cloudName,
+            api_key: apiKey,
+            api_secret: apiSecret
+        });
 
         // Upload to Cloudinary
         const result = await cloudinary.uploader.upload(image, {
