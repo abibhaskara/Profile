@@ -23,7 +23,18 @@ export default async function handler(req, res) {
         }
 
         if (req.method === 'PUT') {
+            // Validate body exists
+            if (!req.body || Object.keys(req.body).length === 0) {
+                return res.status(400).json({ error: 'Request body is required' });
+            }
+
             const { id: bodyId, createdAt, ...updateData } = req.body;
+
+            // Validate we have data to update
+            if (Object.keys(updateData).length === 0) {
+                return res.status(400).json({ error: 'No update data provided' });
+            }
+
             const updatedPost = await db.update(posts)
                 .set(updateData)
                 .where(eq(posts.slug, slug))
