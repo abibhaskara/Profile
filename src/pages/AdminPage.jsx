@@ -16,10 +16,13 @@ const AdminPage = () => {
         tags: ''
     });
 
+    // API base URL - use relative path for production, localhost for dev
+    const API_BASE = import.meta.env.DEV ? 'http://localhost:3001/api/posts' : '/api/posts';
+
     // Fetch posts
     const fetchPosts = async () => {
         try {
-            const res = await fetch('http://localhost:3001/api/posts');
+            const res = await fetch(API_BASE);
             if (res.ok) {
                 const data = await res.json();
                 setPosts(data);
@@ -55,7 +58,7 @@ const AdminPage = () => {
 
     const handleDelete = async (id) => {
         if (!confirm('Are you sure you want to delete this post?')) return;
-        await fetch(`http://localhost:3001/api/posts/${id}`, { method: 'DELETE' });
+        await fetch(`${API_BASE}/${id}`, { method: 'DELETE' });
         fetchPosts();
     };
 
@@ -70,8 +73,8 @@ const AdminPage = () => {
 
         const method = formData.id ? 'PUT' : 'POST';
         const url = formData.id
-            ? `http://localhost:3001/api/posts/${formData.id}`
-            : 'http://localhost:3001/api/posts';
+            ? `${API_BASE}/${formData.id}`
+            : API_BASE;
 
         try {
             const res = await fetch(url, {
