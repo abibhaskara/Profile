@@ -37,6 +37,19 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'No image provided' });
         }
 
+        // Check if credentials are configured
+        if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+            return res.status(500).json({
+                error: 'Cloudinary not configured',
+                message: 'Missing environment variables',
+                debug: {
+                    hasCloudName: !!process.env.CLOUDINARY_CLOUD_NAME,
+                    hasApiKey: !!process.env.CLOUDINARY_API_KEY,
+                    hasApiSecret: !!process.env.CLOUDINARY_API_SECRET
+                }
+            });
+        }
+
         // Upload to Cloudinary
         const result = await cloudinary.uploader.upload(image, {
             folder: 'portfolio-blog',
