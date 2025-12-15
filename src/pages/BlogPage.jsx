@@ -73,6 +73,7 @@ const BlogPage = () => {
 
     // Get card size based on index
     const getCardSize = (index) => {
+        if (searchQuery) return 'normal';
         if (index === 0) return 'large';
         if (index === 1) return 'wide';
         return 'normal';

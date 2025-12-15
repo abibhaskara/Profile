@@ -1496,6 +1496,7 @@ a {
 /* Blog Search */
 .blog-search-container {
   max-width: 1200px;
+  width: 100%;
   margin: 0 auto 32px;
   display: flex;
   justify-content: flex-end;
