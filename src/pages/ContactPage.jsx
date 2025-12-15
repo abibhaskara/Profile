@@ -83,7 +83,7 @@ const ContactPage = () => {
                             whileHover={{ scale: 1.02 }}
                         >
                             <HiPhone />
-                            <span>+62 896 1526 1006</span>
+                            <span>+62 896 1526 1005</span>
                         </motion.a>
                         <motion.div
                             className="contact-link"
