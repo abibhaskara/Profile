@@ -1686,14 +1686,6 @@ a {
       rgba(0, 0, 0, 0.3) 0%,
       rgba(0, 0, 0, 0.6) 50%,
       rgba(0, 0, 0, 0.95) 100%);
-  transition: background 0.3s ease;
-}
-
-.bento-card:hover .bento-overlay {
-  background: linear-gradient(to bottom,
-      rgba(0, 0, 0, 0.2) 0%,
-      rgba(0, 0, 0, 0.5) 50%,
-      rgba(0, 0, 0, 0.9) 100%);
 }
 
 /* Card Content */
