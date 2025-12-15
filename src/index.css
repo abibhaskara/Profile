@@ -1476,7 +1476,7 @@ a {
   border: 1px solid var(--border);
   border-radius: 24px;
   overflow: hidden;
-  aspect-ratio: 16/9;
+  aspect-ratio: 4/3;
   position: relative;
 }
 
