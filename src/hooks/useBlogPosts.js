@@ -12,10 +12,10 @@ export const useBlogPosts = () => {
     useEffect(() => {
         const loadPosts = async () => {
             try {
-                // Use relative URL or same-origin API for production compatibility
-                const apiUrl = window.location.hostname === 'localhost'
+                // Use relative URL for production (Vercel) or localhost for dev
+                const apiUrl = import.meta.env.DEV
                     ? 'http://localhost:3001/api/posts'
-                    : `${window.location.protocol}//${window.location.hostname}:3001/api/posts`;
+                    : '/api/posts';
 
                 const response = await fetch(apiUrl);
                 if (!response.ok) throw new Error('Failed to fetch posts');
