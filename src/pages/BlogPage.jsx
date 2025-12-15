@@ -55,7 +55,7 @@ const BentoSkeleton = ({ size = 'normal' }) => (
 
 const BlogPage = () => {
     const { posts: blogPosts, isLoading } = useBlogPosts();
-    const [visiblePosts, setVisiblePosts] = useState(7);
+    const [visiblePosts, setVisiblePosts] = useState(4);
 
     const loadMore = () => setVisiblePosts(prev => prev + 6);
 
@@ -184,15 +184,11 @@ const BlogPage = () => {
                 </div>
 
                 {!isLoading && visiblePosts < blogPosts.length && (
-                    <motion.div className="blog-see-more" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}>
-                        <motion.button
-                            onClick={loadMore}
-                            whileHover={{ scale: 1.05, boxShadow: '0 10px 40px rgba(239, 68, 68, 0.3)' }}
-                            whileTap={{ scale: 0.95 }}
-                        >
-                            LOAD MORE
-                        </motion.button>
-                    </motion.div>
+                    <div className="load-more-container">
+                        <button onClick={loadMore} className="load-more-btn">
+                            Load More <HiArrowRight />
+                        </button>
+                    </div>
                 )}
             </div>
         </div>
