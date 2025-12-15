@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FaGithub } from 'react-icons/fa';
-import { HiArrowRight } from 'react-icons/hi2';
+import { HiArrowRight, HiMagnifyingGlass } from 'react-icons/hi2';
 import { Link } from 'react-router-dom';
 import { useBlogPosts } from '../hooks/useBlogPosts';
 
@@ -55,9 +55,21 @@ const BentoSkeleton = ({ size = 'normal' }) => (
 
 const BlogPage = () => {
     const { posts: blogPosts, isLoading } = useBlogPosts();
+    const [searchQuery, setSearchQuery] = useState('');
     const [visiblePosts, setVisiblePosts] = useState(4);
 
     const loadMore = () => setVisiblePosts(prev => prev + 6);
+
+    const filteredPosts = blogPosts.filter(post => {
+        const query = searchQuery.toLowerCase();
+        const searchTags = Array.isArray(post.tags) ? post.tags : (typeof post.tags === 'string' ? JSON.parse(post.tags) : []);
+
+        return (
+            post.title?.toLowerCase().includes(query) ||
+            post.description?.toLowerCase().includes(query) ||
+            searchTags.some(tag => tag.toLowerCase().includes(query))
+        );
+    });
 
     // Get card size based on index
     const getCardSize = (index) => {
@@ -164,6 +176,20 @@ const BlogPage = () => {
 
             {/* Bento Grid */}
             <div className="blog-posts-section">
+                {/* Search Bar */}
+                <div className="blog-search-container">
+                    <div className="blog-search-wrapper">
+                        <HiMagnifyingGlass className="blog-search-icon" />
+                        <input
+                            type="text"
+                            placeholder="Search articles..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="blog-search-input"
+                        />
+                    </div>
+                </div>
+
                 <div className="bento-grid">
                     {isLoading ? (
                         <>
@@ -172,7 +198,7 @@ const BlogPage = () => {
                             {[1, 2, 3, 4].map(i => <BentoSkeleton key={i} />)}
                         </>
                     ) : (
-                        blogPosts.slice(0, visiblePosts).map((post, index) => (
+                        filteredPosts.slice(0, visiblePosts).map((post, index) => (
                             <BentoCard
                                 key={post.id || index}
                                 post={post}
@@ -183,7 +209,7 @@ const BlogPage = () => {
                     )}
                 </div>
 
-                {!isLoading && visiblePosts < blogPosts.length && (
+                {!isLoading && visiblePosts < filteredPosts.length && (
                     <div className="load-more-container">
                         <button onClick={loadMore} className="load-more-btn">
                             Load More <HiArrowRight />

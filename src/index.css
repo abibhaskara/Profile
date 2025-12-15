@@ -1493,6 +1493,55 @@ a {
   padding: 40px 24px;
 }
 
+/* Blog Search */
+.blog-search-container {
+  max-width: 1200px;
+  margin: 0 auto 32px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.blog-search-wrapper {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+}
+
+.blog-search-input {
+  width: 100%;
+  padding: 12px 16px 12px 44px;
+  background: var(--glass-surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 14px;
+  outline: none;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.blog-search-input:focus {
+  border-color: var(--accent);
+  background: rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.blog-search-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: 18px;
+  pointer-events: none;
+  transition: color 0.3s;
+}
+
+.blog-search-input:focus+.blog-search-icon {
+  color: var(--accent);
+}
+
 .blog-posts-grid {
   max-width: 1200px;
   margin: 0 auto;
@@ -1738,9 +1787,17 @@ a {
   transform: translateX(0);
 }
 
-/* Info Section */
+/* Info Section - Lift Animation */
 .bento-info {
   color: white;
+  transform: translateY(28px);
+  /* Push down initially */
+  transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.bento-card:hover .bento-info {
+  transform: translateY(0);
+  /* Lift up on hover */
 }
 
 .bento-info h3 {
@@ -1765,7 +1822,7 @@ a {
   line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
 
@@ -1774,16 +1831,18 @@ a {
   line-clamp: 3;
 }
 
-/* Read More - Hover Only */
+/* Read More - Reveal on Hover */
 .bento-read-more {
   display: inline-block;
-  font-size: 14px;
-  font-weight: 600;
-  color: white;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent);
   opacity: 0;
   transform: translateY(10px);
-  transition: all 0.3s ease;
-  margin-top: 12px;
+  transition: all 0.3s ease 0.1s;
+  /* Slight delay */
 }
 
 .bento-card:hover .bento-read-more {
