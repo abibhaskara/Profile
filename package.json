@@ -7,7 +7,7 @@
     "dev": "concurrently \"npm run server\" \"vite\"",
     "dev:client": "vite",
     "server": "nodemon server/index.js",
-    "build": "vite build",
+    "build": "vite build && npx esbuild worker.js --bundle --format=esm --outfile=dist/_worker.js --platform=browser --external:cloudflare:workers",
     "lint": "eslint .",
     "preview": "vite preview",
     "share": "ngrok http 5173"
