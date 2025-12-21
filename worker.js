@@ -197,10 +197,12 @@ export default {
         }
 
         // --- Static Assets (SPA Fallback) ---
-        // If not an API route, serve static assets via Cloudflare Pages Asset Handling
-        // Note: When using a Worker with Pages, we typically use `env.ASSETS.fetch`
         if (env.ASSETS) {
-            return env.ASSETS.fetch(request);
+            const response = await env.ASSETS.fetch(request);
+            if (response.status === 404 && !path.startsWith('/api/')) {
+                return env.ASSETS.fetch(new Request(new URL('/index.html', request.url), request));
+            }
+            return response;
         }
 
         return new Response('Not Found', { status: 404 });
