@@ -25,12 +25,28 @@ const settings = sqliteTable('settings', {
 
 // --- Helper Functions ---
 
-function getDb(env) {
-    const client = createClient({
+function getClient(env) {
+    return createClient({
         url: env.TURSO_DATABASE_URL,
         authToken: env.TURSO_AUTH_TOKEN,
     });
+}
+
+function getDb(env) {
+    const client = getClient(env);
     return drizzle(client, { schema: { posts, settings } });
+}
+
+// Ensure settings table exists
+async function ensureSettingsTable(env) {
+    const client = getClient(env);
+    await client.execute(`
+        CREATE TABLE IF NOT EXISTS settings (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            key TEXT NOT NULL UNIQUE,
+            value TEXT NOT NULL
+        )
+    `);
 }
 
 function setCorsHeaders(res) {
@@ -205,10 +221,13 @@ export default {
 
         // 4. Settings Routes
         if (path.startsWith('/api/settings')) {
-            const db = getDb(env);
             const settingKey = path.split('/').pop();
 
             try {
+                // Ensure settings table exists before any query
+                await ensureSettingsTable(env);
+                const db = getDb(env);
+
                 if (method === 'GET' && settingKey && settingKey !== 'settings') {
                     const setting = await db.select().from(settings).where(eq(settings.key, settingKey)).limit(1);
                     if (!setting.length) {
