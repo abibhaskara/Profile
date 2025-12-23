@@ -146,49 +146,48 @@ const BlogPostPage = () => {
             {/* Hero Image */}
             <motion.div
                 className="post-hero-image"
-                initial={{ opacity: 0, scale: 1.05 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.6 }}
             >
                 <motion.img
                     src={post.image}
                     alt={post.title}
-                    loading="lazy"
+                    loading="eager"
                     decoding="async"
                     onLoad={() => setImageLoaded(true)}
-                    initial={{ scale: 1.1 }}
-                    animate={{ scale: 1 }}
-                    transition={{ duration: 1.2, ease: [0.25, 0.46, 0.45, 0.94] }}
-                    style={{
-                        opacity: imageLoaded ? 1 : 0,
-                        transition: 'opacity 0.5s ease-in-out'
+                    initial={{ scale: 1.15, opacity: 0 }}
+                    animate={{
+                        scale: imageLoaded ? 1 : 1.15,
+                        opacity: imageLoaded ? 1 : 0
                     }}
+                    transition={{ duration: 1.2, ease: [0.25, 0.46, 0.45, 0.94] }}
                 />
                 <div className="post-overlay" />
                 <div className="container post-hero-content">
                     <motion.button
                         onClick={() => navigate('/blog')}
                         className="back-button"
-                        initial={{ opacity: 0, x: -20 }}
+                        initial={{ opacity: 0, x: -30 }}
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.5, delay: 0.3 }}
+                        transition={{ duration: 0.5, delay: 0.4 }}
                         whileHover={{ x: -4 }}
                         whileTap={{ scale: 0.95 }}
                     >
                         <HiArrowLeft /> Back to Blog
                     </motion.button>
                     <motion.h1
-                        initial={{ opacity: 0, y: 30 }}
+                        initial={{ opacity: 0, y: 40 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+                        transition={{ duration: 0.7, delay: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
                     >
                         {language === 'en' && translatedContent.title ? translatedContent.title : post.title}
                     </motion.h1>
                     <motion.div
                         className="post-meta"
-                        initial={{ opacity: 0, y: 20 }}
+                        initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, delay: 0.4 }}
+                        transition={{ duration: 0.5, delay: 0.7 }}
                     >
                         <span className="meta-item">
                             <HiCalendar />
