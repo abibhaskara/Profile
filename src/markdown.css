@@ -43,10 +43,6 @@
 }
 
 .back-button {
-    position: fixed;
-    top: 100px;
-    left: 24px;
-    z-index: 100;
     display: inline-flex;
     align-items: center;
     gap: 8px;
@@ -58,6 +54,7 @@
     border-radius: 99px;
     font-size: 14px;
     font-weight: 500;
+    margin-bottom: 24px;
     cursor: pointer;
     transition: all 0.2s;
 }

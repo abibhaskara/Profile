@@ -1,7 +1,7 @@
 /* Abi Bhaskara copyright 2025 */
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaGithub } from 'react-icons/fa';
+import { FaInstagram } from 'react-icons/fa';
 import { HiArrowRight, HiMagnifyingGlass } from 'react-icons/hi2';
 import { Link } from 'react-router-dom';
 import { useBlogPosts } from '../hooks/useBlogPosts';
@@ -245,8 +245,8 @@ const BlogPage = () => {
                             </motion.div>
                             <motion.div className="blog-stat-card icon-only" whileHover={{ y: -4 }} whileTap={{ scale: 0.9 }}
                                 variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0, transition: { delay: 0.4 } } }}>
-                                <a href="https://github.com/abibhaskara" target="_blank" rel="noopener noreferrer">
-                                    <FaGithub size={24} />
+                                <a href="https://instagram.com/abibhaskara" target="_blank" rel="noopener noreferrer">
+                                    <FaInstagram size={24} />
                                 </a>
                             </motion.div>
                         </div>
