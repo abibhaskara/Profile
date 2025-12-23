@@ -808,16 +808,35 @@ Use **bold** or *italic* text.
                             onChange={(e) => setHeaderSettings(prev => ({ ...prev, youtubeUrl: e.target.value }))}
                             placeholder="https://www.youtube.com/watch?v=..."
                         />
-                        {headerSettings.youtubeUrl && (
-                            <div style={{ marginTop: '16px', borderRadius: '12px', overflow: 'hidden', aspectRatio: '16/9', maxWidth: '400px' }}>
-                                <iframe
-                                    src={headerSettings.youtubeUrl.replace('watch?v=', 'embed/').split('&')[0]}
-                                    style={{ width: '100%', height: '100%', border: 'none' }}
-                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope"
-                                    allowFullScreen
-                                />
-                            </div>
-                        )}
+                        {headerSettings.youtubeUrl && (() => {
+                            // Convert YouTube URL to embed format
+                            let embedUrl = headerSettings.youtubeUrl;
+                            // Handle youtu.be short URLs
+                            if (embedUrl.includes('youtu.be/')) {
+                                const videoId = embedUrl.split('youtu.be/')[1].split('?')[0];
+                                embedUrl = `https://www.youtube.com/embed/${videoId}`;
+                            }
+                            // Handle youtube.com/watch URLs
+                            else if (embedUrl.includes('watch?v=')) {
+                                const videoId = embedUrl.split('watch?v=')[1].split('&')[0];
+                                embedUrl = `https://www.youtube.com/embed/${videoId}`;
+                            }
+                            // Handle youtube.com/embed URLs (already correct)
+                            else if (!embedUrl.includes('/embed/')) {
+                                return null;
+                            }
+
+                            return (
+                                <div style={{ marginTop: '16px', borderRadius: '12px', overflow: 'hidden', aspectRatio: '16/9', maxWidth: '400px' }}>
+                                    <iframe
+                                        src={embedUrl}
+                                        style={{ width: '100%', height: '100%', border: 'none' }}
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope"
+                                        allowFullScreen
+                                    />
+                                </div>
+                            );
+                        })()}
                     </div>
                 )}
 

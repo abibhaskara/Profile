@@ -259,23 +259,35 @@ const BlogPage = () => {
             {/* Dynamic Header Media */}
             {headerSettings && (
                 <div className="blog-video-section">
-                    {headerSettings.mediaType === 'youtube' && headerSettings.youtubeUrl && (
-                        <motion.div
-                            className="blog-video-wrapper"
-                            initial={{ opacity: 0, y: 30 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.8 }}
-                        >
-                            <iframe
-                                src={headerSettings.youtubeUrl.replace('watch?v=', 'embed/').split('&')[0]}
-                                title="YouTube video"
-                                frameBorder="0"
-                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                allowFullScreen
-                            />
-                        </motion.div>
-                    )}
+                    {headerSettings.mediaType === 'youtube' && headerSettings.youtubeUrl && (() => {
+                        // Convert YouTube URL to embed format
+                        let embedUrl = headerSettings.youtubeUrl;
+                        if (embedUrl.includes('youtu.be/')) {
+                            const videoId = embedUrl.split('youtu.be/')[1].split('?')[0];
+                            embedUrl = `https://www.youtube.com/embed/${videoId}`;
+                        } else if (embedUrl.includes('watch?v=')) {
+                            const videoId = embedUrl.split('watch?v=')[1].split('&')[0];
+                            embedUrl = `https://www.youtube.com/embed/${videoId}`;
+                        }
+
+                        return (
+                            <motion.div
+                                className="blog-video-wrapper"
+                                initial={{ opacity: 0, y: 30 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.8 }}
+                            >
+                                <iframe
+                                    src={embedUrl}
+                                    title="YouTube video"
+                                    frameBorder="0"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowFullScreen
+                                />
+                            </motion.div>
+                        );
+                    })()}
                     {headerSettings.mediaType === 'carousel' && headerSettings.carouselImages?.length > 0 && (
                         <motion.div
                             className="blog-video-wrapper"
