@@ -44,7 +44,7 @@
 
 .back-button {
     position: fixed;
-    top: 100px;
+    top: 24px;
     left: 24px;
     z-index: 100;
     display: inline-flex;
