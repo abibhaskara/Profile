@@ -56,6 +56,26 @@ function AppContent({ audioRef, isPlaying, setIsPlaying, hasStarted, setHasStart
     }
   }, [isAdminPage, isPlaying, audioRef]);
 
+  // Analytics tracking on route change
+  useEffect(() => {
+    // Don't track admin page
+    if (isAdminPage) return;
+
+    const trackPageView = async () => {
+      try {
+        await fetch('/api/analytics/track', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ path: location.pathname })
+        });
+      } catch (e) {
+        // Silently fail - analytics shouldn't break the app
+      }
+    };
+
+    trackPageView();
+  }, [location.pathname, isAdminPage]);
+
   return (
     <>
       {/* Skip to main content link for accessibility */}

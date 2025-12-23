@@ -15,9 +15,11 @@ const posts = sqliteTable('posts', {
     tags: text('tags'),
     createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
     // Per-post media settings
-    mediaType: text('media_type'), // 'youtube' | 'carousel' | null
+    mediaType: text('media_type'),
     youtubeUrl: text('youtube_url'),
-    carouselImages: text('carousel_images'), // JSON array
+    carouselImages: text('carousel_images'),
+    // Analytics
+    viewCount: integer('view_count').default(0),
 });
 
 // Settings table for site configuration
@@ -25,6 +27,14 @@ const settings = sqliteTable('settings', {
     id: integer('id').primaryKey({ autoIncrement: true }),
     key: text('key').notNull().unique(),
     value: text('value').notNull(),
+});
+
+// Analytics table for page views
+const analytics = sqliteTable('analytics', {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    path: text('path').notNull(),
+    timestamp: integer('timestamp', { mode: 'timestamp' }).notNull(),
+    date: text('date').notNull(), // YYYY-MM-DD for easy grouping
 });
 
 // --- Helper Functions ---
@@ -53,14 +63,30 @@ async function ensureSettingsTable(env) {
     `);
 }
 
-// Ensure posts table has media columns (for existing databases)
+// Ensure analytics table exists
+async function ensureAnalyticsTable(env) {
+    const client = getClient(env);
+    await client.execute(`
+        CREATE TABLE IF NOT EXISTS analytics (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            path TEXT NOT NULL,
+            timestamp INTEGER NOT NULL,
+            date TEXT NOT NULL
+        )
+    `);
+}
+
+// Ensure posts table has new columns (for existing databases)
 async function ensurePostsColumns(env) {
     const client = getClient(env);
-    // Add columns if they don't exist (SQLite will error if column exists, so we use try-catch)
-    const columns = ['media_type', 'youtube_url', 'carousel_images'];
+    const columns = ['media_type', 'youtube_url', 'carousel_images', 'view_count'];
     for (const col of columns) {
         try {
-            await client.execute(`ALTER TABLE posts ADD COLUMN ${col} TEXT`);
+            if (col === 'view_count') {
+                await client.execute(`ALTER TABLE posts ADD COLUMN ${col} INTEGER DEFAULT 0`);
+            } else {
+                await client.execute(`ALTER TABLE posts ADD COLUMN ${col} TEXT`);
+            }
         } catch (e) {
             // Column likely already exists, ignore
         }
@@ -288,6 +314,90 @@ export default {
             } catch (err) {
                 console.error('Settings API Error:', err);
                 return errorResponse(`Settings error: ${err.message}`, 500);
+            }
+        }
+
+        // 5. Analytics Routes
+        if (path.startsWith('/api/analytics')) {
+            try {
+                await ensureAnalyticsTable(env);
+                await ensurePostsColumns(env);
+                const db = getDb(env);
+                const client = getClient(env);
+
+                // Track page view
+                if (path === '/api/analytics/track' && method === 'POST') {
+                    const body = await request.json();
+                    const { path: pagePath } = body;
+
+                    if (!pagePath) return errorResponse('Path required', 400);
+
+                    const now = new Date();
+                    const dateStr = now.toISOString().split('T')[0];
+
+                    // Insert analytics record
+                    await db.insert(analytics).values({
+                        path: pagePath,
+                        timestamp: now,
+                        date: dateStr
+                    });
+
+                    // If it's a blog post, increment view count
+                    if (pagePath.startsWith('/blog/') && pagePath !== '/blog') {
+                        const slug = pagePath.split('/blog/')[1];
+                        if (slug) {
+                            await client.execute({
+                                sql: `UPDATE posts SET view_count = COALESCE(view_count, 0) + 1 WHERE slug = ?`,
+                                args: [slug]
+                            });
+                        }
+                    }
+
+                    return jsonResponse({ success: true });
+                }
+
+                // Get analytics summary
+                if (path === '/api/analytics/summary' && method === 'GET') {
+                    const today = new Date().toISOString().split('T')[0];
+
+                    // Total views
+                    const totalResult = await client.execute('SELECT COUNT(*) as count FROM analytics');
+                    const totalViews = totalResult.rows[0]?.count || 0;
+
+                    // Today views
+                    const todayResult = await client.execute({
+                        sql: 'SELECT COUNT(*) as count FROM analytics WHERE date = ?',
+                        args: [today]
+                    });
+                    const todayViews = todayResult.rows[0]?.count || 0;
+
+                    // Top 5 posts
+                    const topPosts = await db.select({
+                        id: posts.id,
+                        slug: posts.slug,
+                        title: posts.title,
+                        viewCount: posts.viewCount
+                    })
+                        .from(posts)
+                        .orderBy(desc(posts.viewCount))
+                        .limit(5);
+
+                    // Total posts count
+                    const postsResult = await client.execute('SELECT COUNT(*) as count FROM posts');
+                    const totalPosts = postsResult.rows[0]?.count || 0;
+
+                    return jsonResponse({
+                        totalViews,
+                        todayViews,
+                        totalPosts,
+                        topPosts
+                    });
+                }
+
+                return errorResponse('Method not allowed', 405);
+            } catch (err) {
+                console.error('Analytics API Error:', err);
+                return errorResponse(`Analytics error: ${err.message}`, 500);
             }
         }
 
