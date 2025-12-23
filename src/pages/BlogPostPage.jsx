@@ -50,6 +50,79 @@ const BlogPostSkeleton = () => (
     </div>
 );
 
+// Carousel Slideshow - single image with auto-transition and zoom effect
+const CarouselSlideshow = ({ images }) => {
+    const [currentIndex, setCurrentIndex] = useState(0);
+
+    useEffect(() => {
+        if (images.length <= 1) return;
+        const interval = setInterval(() => {
+            setCurrentIndex(prev => (prev + 1) % images.length);
+        }, 5000);
+        return () => clearInterval(interval);
+    }, [images.length]);
+
+    return (
+        <div style={{
+            position: 'relative',
+            width: '100%',
+            maxWidth: '900px',
+            margin: '0 auto',
+            aspectRatio: '16/9',
+            borderRadius: '16px',
+            overflow: 'hidden',
+            background: 'rgba(0,0,0,0.2)'
+        }}>
+            <AnimatePresence mode="wait">
+                <motion.img
+                    key={currentIndex}
+                    src={images[currentIndex]}
+                    alt={`Slide ${currentIndex + 1}`}
+                    initial={{ scale: 1.15, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.95, opacity: 0 }}
+                    transition={{ duration: 1.2, ease: [0.25, 0.46, 0.45, 0.94] }}
+                    style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        position: 'absolute',
+                        top: 0,
+                        left: 0
+                    }}
+                />
+            </AnimatePresence>
+            {/* Slide indicators */}
+            {images.length > 1 && (
+                <div style={{
+                    position: 'absolute',
+                    bottom: '16px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    display: 'flex',
+                    gap: '8px'
+                }}>
+                    {images.map((_, idx) => (
+                        <button
+                            key={idx}
+                            onClick={() => setCurrentIndex(idx)}
+                            style={{
+                                width: idx === currentIndex ? '24px' : '8px',
+                                height: '8px',
+                                borderRadius: '4px',
+                                background: idx === currentIndex ? 'white' : 'rgba(255,255,255,0.5)',
+                                border: 'none',
+                                cursor: 'pointer',
+                                transition: 'all 0.3s ease'
+                            }}
+                        />
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
 const BlogPostPage = () => {
     const { slug } = useParams();
     const navigate = useNavigate();
@@ -265,18 +338,7 @@ const BlogPostPage = () => {
                         try {
                             const images = typeof post.carouselImages === 'string' ? JSON.parse(post.carouselImages) : post.carouselImages;
                             if (!Array.isArray(images) || images.length === 0) return null;
-                            return (
-                                <div style={{ display: 'flex', gap: '16px', overflowX: 'auto', padding: '8px 0' }}>
-                                    {images.map((img, idx) => (
-                                        <img
-                                            key={idx}
-                                            src={img}
-                                            alt={`Slide ${idx + 1}`}
-                                            style={{ height: '300px', borderRadius: '12px', objectFit: 'cover' }}
-                                        />
-                                    ))}
-                                </div>
-                            );
+                            return <CarouselSlideshow images={images} />;
                         } catch { return null; }
                     })()}
                 </motion.div>
