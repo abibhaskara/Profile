@@ -255,7 +255,7 @@ const BlogPostPage = () => {
                         exit={{ opacity: 0, scale: 0.9 }}
                         transition={{ duration: 0.3, ease: 'easeOut' }}
                     >
-                        🤖 Auto-translated
+                        <span>🤖 Auto-translated</span>
                     </motion.div>
                 )}
             </AnimatePresence>

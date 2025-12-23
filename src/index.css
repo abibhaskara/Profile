@@ -1520,17 +1520,25 @@ a {
 /* Auto-translated Toast Popup */
 .auto-translated-toast {
   position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 1000;
-  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.auto-translated-toast span {
+  padding: 16px 32px;
   background: var(--glass-surface);
   backdrop-filter: blur(16px);
   border: 1px solid var(--border);
   border-radius: 12px;
   color: var(--text-primary);
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 500;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
