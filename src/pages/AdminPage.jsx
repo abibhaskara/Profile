@@ -77,11 +77,13 @@ const AdminPage = () => {
             if (res.ok) {
                 alert('Header settings saved!');
             } else {
-                alert('Failed to save settings');
+                const errorText = await res.text();
+                console.error('Save settings failed:', res.status, errorText);
+                alert(`Failed to save settings: ${res.status} - ${errorText}`);
             }
         } catch (err) {
             console.error('Save settings error:', err);
-            alert('Error saving settings');
+            alert(`Error saving settings: ${err.message}`);
         }
         setIsSavingSettings(false);
     };

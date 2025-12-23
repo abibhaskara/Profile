@@ -244,7 +244,7 @@ export default {
                 return errorResponse('Method not allowed', 405);
             } catch (err) {
                 console.error('Settings API Error:', err);
-                return errorResponse('Internal Server Error');
+                return errorResponse(`Settings error: ${err.message}`, 500);
             }
         }
 
