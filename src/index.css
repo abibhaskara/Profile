@@ -1520,9 +1520,9 @@ a {
 /* Auto-translated Toast Popup */
 .auto-translated-toast {
   position: fixed;
-  top: 100px;
+  top: 50%;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translate(-50%, -50%);
   z-index: 1000;
   padding: 12px 24px;
   background: var(--glass-surface);
