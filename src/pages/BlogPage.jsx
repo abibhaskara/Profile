@@ -106,6 +106,18 @@ const BlogPage = () => {
     const [visiblePosts, setVisiblePosts] = useState(4);
     const [headerSettings, setHeaderSettings] = useState(null);
     const [translations, setTranslations] = useState({});
+    const [showToast, setShowToast] = useState(false);
+
+    // Show toast when switching to English
+    useEffect(() => {
+        if (language === 'en') {
+            setShowToast(true);
+            const timer = setTimeout(() => setShowToast(false), 3000);
+            return () => clearTimeout(timer);
+        } else {
+            setShowToast(false);
+        }
+    }, [language]);
 
     // Fetch header settings
     useEffect(() => {
@@ -310,17 +322,20 @@ const BlogPage = () => {
                     </div>
                 </div>
 
-                {/* Auto-translated notice */}
-                {language === 'en' && (
-                    <motion.div
-                        className="auto-translated-badge"
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3 }}
-                    >
-                        🤖 Auto-translated {isTranslating && '(translating...)'}
-                    </motion.div>
-                )}
+                {/* Auto-translated toast popup */}
+                <AnimatePresence>
+                    {showToast && (
+                        <motion.div
+                            className="auto-translated-toast"
+                            initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                            transition={{ duration: 0.3, ease: 'easeOut' }}
+                        >
+                            🤖 Auto-translated
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 <div className="bento-grid">
                     {isLoading ? (

@@ -1,7 +1,7 @@
 /* Abi Bhaskara copyright 2025 */
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { HiArrowLeft, HiCalendar, HiTag } from 'react-icons/hi2';
 import ReactMarkdown from 'react-markdown';
 import { useBlogPosts } from '../hooks/useBlogPosts';
@@ -59,6 +59,7 @@ const BlogPostPage = () => {
     const [notFound, setNotFound] = useState(false);
     const [imageLoaded, setImageLoaded] = useState(false);
     const [translatedContent, setTranslatedContent] = useState({ title: '', content: '' });
+    const [showToast, setShowToast] = useState(false);
 
     useEffect(() => {
         if (!isLoading) {
@@ -71,6 +72,17 @@ const BlogPostPage = () => {
             }
         }
     }, [slug, posts, isLoading, navigate]);
+
+    // Show toast when switching to English
+    useEffect(() => {
+        if (language === 'en') {
+            setShowToast(true);
+            const timer = setTimeout(() => setShowToast(false), 3000);
+            return () => clearTimeout(timer);
+        } else {
+            setShowToast(false);
+        }
+    }, [language]);
 
     // Translate content when language is English
     useEffect(() => {
@@ -226,17 +238,27 @@ const BlogPostPage = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
             >
-                {language === 'en' && (
-                    <div className="auto-translated-badge" style={{ marginBottom: '24px' }}>
-                        🤖 Auto-translated {isTranslating && '(translating...)'}
-                    </div>
-                )}
                 <article className="post-content">
                     <ReactMarkdown>
                         {language === 'en' && translatedContent.content ? translatedContent.content : post.content}
                     </ReactMarkdown>
                 </article>
             </motion.div>
+
+            {/* Auto-translated toast popup */}
+            <AnimatePresence>
+                {showToast && (
+                    <motion.div
+                        className="auto-translated-toast"
+                        initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                        transition={{ duration: 0.3, ease: 'easeOut' }}
+                    >
+                        🤖 Auto-translated
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </motion.div>
     );
 };
