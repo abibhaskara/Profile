@@ -1,6 +1,6 @@
 /* Abi Bhaskara copyright 2025 */
-import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { FaGithub } from 'react-icons/fa';
 import { HiArrowRight, HiMagnifyingGlass } from 'react-icons/hi2';
 import { Link } from 'react-router-dom';
@@ -53,10 +53,75 @@ const BentoSkeleton = ({ size = 'normal' }) => (
     </div>
 );
 
+// Photo Carousel Component with auto-swipe
+const PhotoCarousel = ({ images }) => {
+    const [currentIndex, setCurrentIndex] = useState(0);
+
+    useEffect(() => {
+        if (images.length <= 1) return;
+        const interval = setInterval(() => {
+            setCurrentIndex((prev) => (prev + 1) % images.length);
+        }, 4000);
+        return () => clearInterval(interval);
+    }, [images.length]);
+
+    if (!images || images.length === 0) return null;
+
+    return (
+        <div className="blog-carousel">
+            <div className="carousel-slides">
+                <AnimatePresence mode="wait">
+                    <motion.img
+                        key={currentIndex}
+                        src={images[currentIndex]}
+                        alt={`Slide ${currentIndex + 1}`}
+                        initial={{ opacity: 0, x: 50 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -50 }}
+                        transition={{ duration: 0.5, ease: 'easeInOut' }}
+                    />
+                </AnimatePresence>
+            </div>
+            {images.length > 1 && (
+                <div className="carousel-dots">
+                    {images.map((_, index) => (
+                        <button
+                            key={index}
+                            className={`carousel-dot ${index === currentIndex ? 'active' : ''}`}
+                            onClick={() => setCurrentIndex(index)}
+                            aria-label={`Go to slide ${index + 1}`}
+                        />
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
 const BlogPage = () => {
     const { posts: blogPosts, isLoading } = useBlogPosts();
     const [searchQuery, setSearchQuery] = useState('');
     const [visiblePosts, setVisiblePosts] = useState(4);
+    const [headerSettings, setHeaderSettings] = useState(null);
+
+    // Fetch header settings
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const API = import.meta.env.DEV ? 'http://localhost:3001/api/settings' : '/api/settings';
+                const res = await fetch(`${API}/blogHeader`);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.value) {
+                        setHeaderSettings(data.value);
+                    }
+                }
+            } catch (err) {
+                console.error('Failed to fetch header settings:', err);
+            }
+        };
+        fetchSettings();
+    }, []);
 
     const loadMore = () => setVisiblePosts(prev => prev + 6);
 
@@ -156,24 +221,39 @@ const BlogPage = () => {
 
             <motion.div className="blog-separator" initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: 1, delay: 0.5 }} />
 
-            {/* YouTube Video */}
-            <div className="blog-video-section">
-                <motion.div
-                    className="blog-video-wrapper"
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.8 }}
-                >
-                    <iframe
-                        src="https://www.youtube.com/embed/R5fsvSonpoY?si=xR3bw69G7u-OoGbJ"
-                        title="YouTube video"
-                        frameBorder="0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                    />
-                </motion.div>
-            </div>
+            {/* Dynamic Header Media */}
+            {headerSettings && (
+                <div className="blog-video-section">
+                    {headerSettings.mediaType === 'youtube' && headerSettings.youtubeUrl && (
+                        <motion.div
+                            className="blog-video-wrapper"
+                            initial={{ opacity: 0, y: 30 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.8 }}
+                        >
+                            <iframe
+                                src={headerSettings.youtubeUrl.replace('watch?v=', 'embed/').split('&')[0]}
+                                title="YouTube video"
+                                frameBorder="0"
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                allowFullScreen
+                            />
+                        </motion.div>
+                    )}
+                    {headerSettings.mediaType === 'carousel' && headerSettings.carouselImages?.length > 0 && (
+                        <motion.div
+                            className="blog-video-wrapper"
+                            initial={{ opacity: 0, y: 30 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.8 }}
+                        >
+                            <PhotoCarousel images={headerSettings.carouselImages} />
+                        </motion.div>
+                    )}
+                </div>
+            )}
 
             {/* Bento Grid */}
             <div className="blog-posts-section">

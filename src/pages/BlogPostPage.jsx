@@ -165,11 +165,29 @@ const BlogPostPage = () => {
                     >
                         <span className="meta-item">
                             <HiCalendar />
-                            {new Date(post.createdAt * 1000).toLocaleDateString('en-US', {
-                                year: 'numeric',
-                                month: 'long',
-                                day: 'numeric'
-                            })}
+                            {(() => {
+                                try {
+                                    // Handle different date formats
+                                    let date;
+                                    if (typeof post.createdAt === 'number') {
+                                        // Unix timestamp (could be seconds or milliseconds)
+                                        date = post.createdAt > 9999999999
+                                            ? new Date(post.createdAt)
+                                            : new Date(post.createdAt * 1000);
+                                    } else if (typeof post.createdAt === 'string') {
+                                        date = new Date(post.createdAt);
+                                    } else {
+                                        date = new Date(post.createdAt);
+                                    }
+                                    return isNaN(date.getTime()) ? 'Unknown Date' : date.toLocaleDateString('en-US', {
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric'
+                                    });
+                                } catch {
+                                    return 'Unknown Date';
+                                }
+                            })()}
                         </span>
                         <span className="meta-divider">•</span>
                         <span className="meta-item">

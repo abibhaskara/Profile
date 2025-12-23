@@ -1,8 +1,13 @@
 /* Abi Bhaskara copyright 2025 */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { motion } from 'framer-motion';
-import { HiPlus, HiPencil, HiTrash, HiCheck, HiXMark, HiCloudArrowUp } from 'react-icons/hi2';
+import { HiPlus, HiPencil, HiTrash, HiCheck, HiXMark, HiCloudArrowUp, HiPhoto, HiVideoCamera } from 'react-icons/hi2';
+
+// API URLs
+const API_BASE = import.meta.env.DEV ? 'http://localhost:3001/api/posts' : '/api/posts';
+const SETTINGS_API = import.meta.env.DEV ? 'http://localhost:3001/api/settings' : '/api/settings';
+const UPLOAD_API = import.meta.env.DEV ? 'http://localhost:3001/api/upload' : '/api/upload';
 
 const AdminPage = () => {
     const [posts, setPosts] = useState([]);
@@ -18,8 +23,14 @@ const AdminPage = () => {
     const [originalSlug, setOriginalSlug] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
 
-    // API base URL - use relative path for production, localhost for dev
-    const API_BASE = import.meta.env.DEV ? 'http://localhost:3001/api/posts' : '/api/posts';
+    // Blog Header Settings State
+    const [headerSettings, setHeaderSettings] = useState({
+        mediaType: 'youtube',
+        youtubeUrl: '',
+        carouselImages: []
+    });
+    const [isUploadingCarousel, setIsUploadingCarousel] = useState(false);
+    const [isSavingSettings, setIsSavingSettings] = useState(false);
 
     // Fetch posts
     const fetchPosts = async () => {
@@ -36,7 +47,44 @@ const AdminPage = () => {
 
     useEffect(() => {
         fetchPosts();
+        fetchHeaderSettings();
     }, []);
+
+    // Fetch blog header settings
+    const fetchHeaderSettings = async () => {
+        try {
+            const res = await fetch(`${SETTINGS_API}/blogHeader`);
+            if (res.ok) {
+                const data = await res.json();
+                if (data.value) {
+                    setHeaderSettings(data.value);
+                }
+            }
+        } catch (err) {
+            console.error("Failed to fetch header settings:", err);
+        }
+    };
+
+    // Save blog header settings
+    const saveHeaderSettings = async () => {
+        setIsSavingSettings(true);
+        try {
+            const res = await fetch(`${SETTINGS_API}/blogHeader`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ value: headerSettings })
+            });
+            if (res.ok) {
+                alert('Header settings saved!');
+            } else {
+                alert('Failed to save settings');
+            }
+        } catch (err) {
+            console.error('Save settings error:', err);
+            alert('Error saving settings');
+        }
+        setIsSavingSettings(false);
+    };
 
     const resetForm = () => {
         setFormData({
@@ -125,11 +173,7 @@ const AdminPage = () => {
             reader.onload = async () => {
                 const base64 = reader.result;
 
-                const UPLOAD_URL = import.meta.env.DEV
-                    ? 'http://localhost:3001/api/upload'
-                    : '/api/upload';
-
-                const res = await fetch(UPLOAD_URL, {
+                const res = await fetch(UPLOAD_API, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ image: base64 })
@@ -154,6 +198,68 @@ const AdminPage = () => {
             alert('Upload failed');
             setIsUploading(false);
         }
+    };
+
+    // Carousel image upload handler
+    const handleCarouselImageUpload = async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        if (!file.type.startsWith('image/')) {
+            alert('Please select an image file');
+            return;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+            alert('Image size must be less than 5MB');
+            return;
+        }
+
+        if (headerSettings.carouselImages.length >= 5) {
+            alert('Maximum 5 images allowed');
+            return;
+        }
+
+        setIsUploadingCarousel(true);
+
+        try {
+            const reader = new FileReader();
+            reader.onload = async () => {
+                const base64 = reader.result;
+
+                const res = await fetch(UPLOAD_API, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: base64 })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    setHeaderSettings(prev => ({
+                        ...prev,
+                        carouselImages: [...prev.carouselImages, data.url]
+                    }));
+                } else {
+                    alert('Upload failed');
+                }
+                setIsUploadingCarousel(false);
+            };
+            reader.onerror = () => {
+                alert('Failed to read file');
+                setIsUploadingCarousel(false);
+            };
+            reader.readAsDataURL(file);
+        } catch (error) {
+            console.error('Upload error:', error);
+            setIsUploadingCarousel(false);
+        }
+    };
+
+    const removeCarouselImage = (index) => {
+        setHeaderSettings(prev => ({
+            ...prev,
+            carouselImages: prev.carouselImages.filter((_, i) => i !== index)
+        }));
     };
 
     // Styles
@@ -635,6 +741,164 @@ Use **bold** or *italic* text.
                     </form>
                 </motion.div>
             </div>
+
+            {/* Blog Header Settings Section */}
+            <motion.div
+                style={{ marginTop: '64px', padding: '32px', background: 'var(--glass-surface)', border: '1px solid var(--border)', borderRadius: '24px' }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+            >
+                <h2 style={{ ...styles.sectionTitle, marginBottom: '24px', fontSize: '20px' }}>🎬 Blog Header Media</h2>
+
+                {/* Media Type Tabs */}
+                <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
+                    <motion.button
+                        type="button"
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '12px 24px',
+                            background: headerSettings.mediaType === 'youtube' ? 'var(--accent)' : 'transparent',
+                            border: '1px solid var(--border)',
+                            borderRadius: '9999px',
+                            color: headerSettings.mediaType === 'youtube' ? 'white' : 'var(--text-secondary)',
+                            fontSize: '14px',
+                            fontWeight: '500',
+                            cursor: 'pointer'
+                        }}
+                        onClick={() => setHeaderSettings(prev => ({ ...prev, mediaType: 'youtube' }))}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                    >
+                        <HiVideoCamera size={18} /> YouTube Video
+                    </motion.button>
+                    <motion.button
+                        type="button"
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '12px 24px',
+                            background: headerSettings.mediaType === 'carousel' ? 'var(--accent)' : 'transparent',
+                            border: '1px solid var(--border)',
+                            borderRadius: '9999px',
+                            color: headerSettings.mediaType === 'carousel' ? 'white' : 'var(--text-secondary)',
+                            fontSize: '14px',
+                            fontWeight: '500',
+                            cursor: 'pointer'
+                        }}
+                        onClick={() => setHeaderSettings(prev => ({ ...prev, mediaType: 'carousel' }))}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                    >
+                        <HiPhoto size={18} /> Photo Carousel
+                    </motion.button>
+                </div>
+
+                {/* YouTube Mode */}
+                {headerSettings.mediaType === 'youtube' && (
+                    <div style={styles.formGroup}>
+                        <label style={styles.label}>YouTube Video URL</label>
+                        <input
+                            type="text"
+                            style={styles.input}
+                            value={headerSettings.youtubeUrl}
+                            onChange={(e) => setHeaderSettings(prev => ({ ...prev, youtubeUrl: e.target.value }))}
+                            placeholder="https://www.youtube.com/watch?v=..."
+                        />
+                        {headerSettings.youtubeUrl && (
+                            <div style={{ marginTop: '16px', borderRadius: '12px', overflow: 'hidden', aspectRatio: '16/9', maxWidth: '400px' }}>
+                                <iframe
+                                    src={headerSettings.youtubeUrl.replace('watch?v=', 'embed/').split('&')[0]}
+                                    style={{ width: '100%', height: '100%', border: 'none' }}
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope"
+                                    allowFullScreen
+                                />
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Carousel Mode */}
+                {headerSettings.mediaType === 'carousel' && (
+                    <div>
+                        <label style={styles.label}>Carousel Images ({headerSettings.carouselImages.length}/5)</label>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginTop: '12px' }}>
+                            {headerSettings.carouselImages.map((url, index) => (
+                                <div key={index} style={{ position: 'relative', width: '120px', height: '80px' }}>
+                                    <img
+                                        src={url}
+                                        alt={`Carousel ${index + 1}`}
+                                        style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px', border: '1px solid var(--border)' }}
+                                    />
+                                    <motion.button
+                                        type="button"
+                                        style={{
+                                            position: 'absolute',
+                                            top: '-8px',
+                                            right: '-8px',
+                                            width: '24px',
+                                            height: '24px',
+                                            background: '#ef4444',
+                                            border: 'none',
+                                            borderRadius: '50%',
+                                            color: 'white',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            cursor: 'pointer'
+                                        }}
+                                        onClick={() => removeCarouselImage(index)}
+                                        whileHover={{ scale: 1.1 }}
+                                        whileTap={{ scale: 0.9 }}
+                                    >
+                                        <HiXMark size={14} />
+                                    </motion.button>
+                                </div>
+                            ))}
+                            {headerSettings.carouselImages.length < 5 && (
+                                <label style={{
+                                    width: '120px',
+                                    height: '80px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    background: 'rgba(255,255,255,0.03)',
+                                    border: '2px dashed var(--border)',
+                                    borderRadius: '8px',
+                                    cursor: isUploadingCarousel ? 'wait' : 'pointer',
+                                    color: 'var(--text-muted)',
+                                    fontSize: '13px'
+                                }}>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleCarouselImageUpload}
+                                        style={{ display: 'none' }}
+                                    />
+                                    {isUploadingCarousel ? '...' : <HiPlus size={24} />}
+                                </label>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Save Button */}
+                <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'flex-end' }}>
+                    <motion.button
+                        type="button"
+                        style={{ ...styles.submitButton, opacity: isSavingSettings ? 0.7 : 1 }}
+                        onClick={saveHeaderSettings}
+                        disabled={isSavingSettings}
+                        whileHover={{ transform: 'translateY(-2px)', boxShadow: '0 8px 24px rgba(239, 68, 68, 0.3)' }}
+                        whileTap={{ scale: 0.98 }}
+                    >
+                        <HiCheck size={16} /> {isSavingSettings ? 'Saving...' : 'Save Header Settings'}
+                    </motion.button>
+                </div>
+            </motion.div>
         </div>
     );
 };

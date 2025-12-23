@@ -16,6 +16,13 @@ const posts = sqliteTable('posts', {
     createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 });
 
+// Settings table for site configuration
+const settings = sqliteTable('settings', {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    key: text('key').notNull().unique(),
+    value: text('value').notNull(),
+});
+
 // --- Helper Functions ---
 
 function getDb(env) {
@@ -23,7 +30,7 @@ function getDb(env) {
         url: env.TURSO_DATABASE_URL,
         authToken: env.TURSO_AUTH_TOKEN,
     });
-    return drizzle(client, { schema: { posts } });
+    return drizzle(client, { schema: { posts, settings } });
 }
 
 function setCorsHeaders(res) {
@@ -192,6 +199,51 @@ export default {
                 return errorResponse('Method not allowed', 405);
             } catch (err) {
                 console.error('API Error:', err);
+                return errorResponse('Internal Server Error');
+            }
+        }
+
+        // 4. Settings Routes
+        if (path.startsWith('/api/settings')) {
+            const db = getDb(env);
+            const settingKey = path.split('/').pop();
+
+            try {
+                if (method === 'GET' && settingKey && settingKey !== 'settings') {
+                    const setting = await db.select().from(settings).where(eq(settings.key, settingKey)).limit(1);
+                    if (!setting.length) {
+                        return jsonResponse({ key: settingKey, value: null });
+                    }
+                    return jsonResponse({
+                        key: setting[0].key,
+                        value: JSON.parse(setting[0].value)
+                    });
+                }
+                if (method === 'PUT' && settingKey && settingKey !== 'settings') {
+                    const body = await request.json();
+                    const valueStr = JSON.stringify(body.value);
+
+                    // Check if setting exists
+                    const existing = await db.select().from(settings).where(eq(settings.key, settingKey)).limit(1);
+
+                    if (existing.length) {
+                        // Update existing
+                        await db.update(settings)
+                            .set({ value: valueStr })
+                            .where(eq(settings.key, settingKey));
+                    } else {
+                        // Insert new
+                        await db.insert(settings).values({
+                            key: settingKey,
+                            value: valueStr
+                        });
+                    }
+
+                    return jsonResponse({ key: settingKey, value: body.value });
+                }
+                return errorResponse('Method not allowed', 405);
+            } catch (err) {
+                console.error('Settings API Error:', err);
                 return errorResponse('Internal Server Error');
             }
         }
