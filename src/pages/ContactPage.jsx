@@ -77,7 +77,9 @@ const ContactPage = () => {
                             <span>abibhaskaramulya@icloud.com</span>
                         </motion.a>
                         <motion.a
-                            href="tel:+1234567890"
+                            href="https://wa.me/6289615261005"
+                            target="_blank"
+                            rel="noopener noreferrer"
                             className="contact-link"
                             whileTap={{ scale: 0.95 }}
                             whileHover={{ scale: 1.02 }}
