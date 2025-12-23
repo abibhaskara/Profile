@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { HiArrowLeft, HiCalendar, HiTag } from 'react-icons/hi2';
 import ReactMarkdown from 'react-markdown';
 import { useBlogPosts } from '../hooks/useBlogPosts';
+import { useLanguage } from '../context/LanguageContext';
 
 // Skeleton loading component
 const BlogPostSkeleton = () => (
@@ -53,9 +54,11 @@ const BlogPostPage = () => {
     const { slug } = useParams();
     const navigate = useNavigate();
     const { posts, isLoading } = useBlogPosts();
+    const { language, translateText, isTranslating } = useLanguage();
     const [post, setPost] = useState(null);
     const [notFound, setNotFound] = useState(false);
     const [imageLoaded, setImageLoaded] = useState(false);
+    const [translatedContent, setTranslatedContent] = useState({ title: '', content: '' });
 
     useEffect(() => {
         if (!isLoading) {
@@ -68,6 +71,18 @@ const BlogPostPage = () => {
             }
         }
     }, [slug, posts, isLoading, navigate]);
+
+    // Translate content when language is English
+    useEffect(() => {
+        if (language === 'en' && post) {
+            const translateContent = async () => {
+                const title = await translateText(post.title);
+                const content = await translateText(post.content);
+                setTranslatedContent({ title, content });
+            };
+            translateContent();
+        }
+    }, [language, post, translateText]);
 
     // Show skeleton while loading
     if (isLoading) {
@@ -155,7 +170,7 @@ const BlogPostPage = () => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, delay: 0.2, ease: [0.25, 0.46, 0.45, 0.94] }}
                     >
-                        {post.title}
+                        {language === 'en' && translatedContent.title ? translatedContent.title : post.title}
                     </motion.h1>
                     <motion.div
                         className="post-meta"
@@ -211,8 +226,15 @@ const BlogPostPage = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
             >
+                {language === 'en' && (
+                    <div className="auto-translated-badge" style={{ marginBottom: '24px' }}>
+                        🤖 Auto-translated {isTranslating && '(translating...)'}
+                    </div>
+                )}
                 <article className="post-content">
-                    <ReactMarkdown>{post.content}</ReactMarkdown>
+                    <ReactMarkdown>
+                        {language === 'en' && translatedContent.content ? translatedContent.content : post.content}
+                    </ReactMarkdown>
                 </article>
             </motion.div>
         </motion.div>

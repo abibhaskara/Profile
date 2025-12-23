@@ -5,9 +5,10 @@ import { FaGithub } from 'react-icons/fa';
 import { HiArrowRight, HiMagnifyingGlass } from 'react-icons/hi2';
 import { Link } from 'react-router-dom';
 import { useBlogPosts } from '../hooks/useBlogPosts';
+import { useLanguage } from '../context/LanguageContext';
 
 // Bento Blog Card Component
-const BentoCard = ({ post, size = 'normal', index }) => {
+const BentoCard = ({ post, size = 'normal', index, translatedTitle, translatedDescription }) => {
     const sizeClass = size === 'large' ? 'bento-large' : size === 'wide' ? 'bento-wide' : '';
 
     return (
@@ -36,8 +37,8 @@ const BentoCard = ({ post, size = 'normal', index }) => {
                         </motion.div>
                     </div>
                     <div className="bento-info">
-                        <h3>{post.title}</h3>
-                        <p>{post.description}</p>
+                        <h3>{translatedTitle || post.title}</h3>
+                        <p>{translatedDescription || post.description}</p>
                         <span className="bento-read-more">Read More →</span>
                     </div>
                 </div>
@@ -100,9 +101,11 @@ const PhotoCarousel = ({ images }) => {
 
 const BlogPage = () => {
     const { posts: blogPosts, isLoading } = useBlogPosts();
+    const { language, setLanguage, translateText, isTranslating } = useLanguage();
     const [searchQuery, setSearchQuery] = useState('');
     const [visiblePosts, setVisiblePosts] = useState(4);
     const [headerSettings, setHeaderSettings] = useState(null);
+    const [translations, setTranslations] = useState({});
 
     // Fetch header settings
     useEffect(() => {
@@ -122,6 +125,26 @@ const BlogPage = () => {
         };
         fetchSettings();
     }, []);
+
+    // Translate posts when language changes to English
+    useEffect(() => {
+        if (language === 'en' && blogPosts.length > 0) {
+            const translatePosts = async () => {
+                const newTranslations = {};
+                for (const post of blogPosts) {
+                    if (!translations[post.id]) {
+                        const translatedTitle = await translateText(post.title);
+                        const translatedDescription = await translateText(post.description);
+                        newTranslations[post.id] = { title: translatedTitle, description: translatedDescription };
+                    }
+                }
+                if (Object.keys(newTranslations).length > 0) {
+                    setTranslations(prev => ({ ...prev, ...newTranslations }));
+                }
+            };
+            translatePosts();
+        }
+    }, [language, blogPosts, translateText]);
 
     const loadMore = () => setVisiblePosts(prev => prev + 6);
 
@@ -257,19 +280,47 @@ const BlogPage = () => {
 
             {/* Bento Grid */}
             <div className="blog-posts-section">
-                {/* Search Bar */}
+                {/* Search Bar and Language Toggle */}
                 <div className="blog-search-container">
                     <div className="blog-search-wrapper">
                         <HiMagnifyingGlass className="blog-search-icon" />
                         <input
                             type="text"
-                            placeholder="Search articles..."
+                            placeholder={language === 'id' ? 'Cari artikel...' : 'Search articles...'}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             className="blog-search-input"
                         />
                     </div>
+
+                    {/* Language Toggle */}
+                    <div className="language-toggle">
+                        <button
+                            className={`lang-btn ${language === 'id' ? 'active' : ''}`}
+                            onClick={() => setLanguage('id')}
+                        >
+                            ID
+                        </button>
+                        <button
+                            className={`lang-btn ${language === 'en' ? 'active' : ''}`}
+                            onClick={() => setLanguage('en')}
+                        >
+                            EN
+                        </button>
+                    </div>
                 </div>
+
+                {/* Auto-translated notice */}
+                {language === 'en' && (
+                    <motion.div
+                        className="auto-translated-badge"
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
+                    >
+                        🤖 Auto-translated {isTranslating && '(translating...)'}
+                    </motion.div>
+                )}
 
                 <div className="bento-grid">
                     {isLoading ? (
@@ -285,6 +336,8 @@ const BlogPage = () => {
                                 post={post}
                                 size={getCardSize(index)}
                                 index={index}
+                                translatedTitle={language === 'en' ? translations[post.id]?.title : null}
+                                translatedDescription={language === 'en' ? translations[post.id]?.description : null}
                             />
                         ))
                     )}

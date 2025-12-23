@@ -12,6 +12,7 @@ import Footer from './components/Footer';
 import ErrorBoundary from './components/ErrorBoundary';
 import LoadingScreen from './components/LoadingScreen';
 import { LoadingProvider } from './context/LoadingContext';
+import { LanguageProvider } from './context/LanguageContext';
 
 // Pages - Eager (Critical path)
 import ProfilePage from './pages/ProfilePage';
@@ -172,21 +173,23 @@ function App() {
         transition: 'opacity 0.3s ease-out',
         visibility: isAppLoading ? 'hidden' : 'visible'
       }}>
-        <ErrorBoundary>
-          <Router>
-            <AppContent
-              audioRef={audioRef}
-              isPlaying={isPlaying}
-              setIsPlaying={setIsPlaying}
-              hasStarted={hasStarted}
-              setHasStarted={setHasStarted}
-              theme={theme}
-              toggleTheme={toggleTheme}
-              toggleMusic={toggleMusic}
-              isAppLoading={isAppLoading}
-            />
-          </Router>
-        </ErrorBoundary>
+        <LanguageProvider>
+          <ErrorBoundary>
+            <Router>
+              <AppContent
+                audioRef={audioRef}
+                isPlaying={isPlaying}
+                setIsPlaying={setIsPlaying}
+                hasStarted={hasStarted}
+                setHasStarted={setHasStarted}
+                theme={theme}
+                toggleTheme={toggleTheme}
+                toggleMusic={toggleMusic}
+                isAppLoading={isAppLoading}
+              />
+            </Router>
+          </ErrorBoundary>
+        </LanguageProvider>
       </div>
     </>
   );
