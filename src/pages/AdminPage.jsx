@@ -18,7 +18,11 @@ const AdminPage = () => {
         description: '',
         content: '',
         image: '',
-        tags: ''
+        tags: '',
+        // Per-post media settings
+        mediaType: null,
+        youtubeUrl: '',
+        carouselImages: '[]'
     });
     const [originalSlug, setOriginalSlug] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
@@ -95,7 +99,10 @@ const AdminPage = () => {
             description: '',
             content: '',
             image: '',
-            tags: ''
+            tags: '',
+            mediaType: null,
+            youtubeUrl: '',
+            carouselImages: '[]'
         });
         setOriginalSlug(null);
         setIsEditing(false);
@@ -314,6 +321,17 @@ const AdminPage = () => {
             borderRadius: '50%',
             cursor: 'pointer',
             transition: 'transform 0.2s, opacity 0.2s'
+        },
+        mediaTypeButton: {
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            padding: '8px 16px',
+            border: '1px solid var(--border)',
+            borderRadius: '9999px',
+            fontSize: '13px',
+            fontWeight: '500',
+            cursor: 'pointer'
         },
         postCard: {
             padding: '16px',
@@ -684,6 +702,57 @@ const AdminPage = () => {
                                     onChange={e => setFormData({ ...formData, tags: e.target.value })}
                                     placeholder="tech, coding, react"
                                 />
+                            </div>
+
+                            {/* Per-Post Media Editor */}
+                            <div style={styles.formGroup}>
+                                <label style={styles.label}>Post Media (Optional)</label>
+                                <div style={{ display: 'flex', gap: '8px', marginBottom: '12px' }}>
+                                    <motion.button
+                                        type="button"
+                                        style={{
+                                            ...styles.mediaTypeButton,
+                                            background: formData.mediaType === 'youtube' ? 'var(--accent)' : 'none',
+                                            color: formData.mediaType === 'youtube' ? 'white' : 'var(--text-secondary)'
+                                        }}
+                                        onClick={() => setFormData({ ...formData, mediaType: formData.mediaType === 'youtube' ? null : 'youtube' })}
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                    >
+                                        <HiVideoCamera size={16} /> YouTube
+                                    </motion.button>
+                                    <motion.button
+                                        type="button"
+                                        style={{
+                                            ...styles.mediaTypeButton,
+                                            background: formData.mediaType === 'carousel' ? 'var(--accent)' : 'none',
+                                            color: formData.mediaType === 'carousel' ? 'white' : 'var(--text-secondary)'
+                                        }}
+                                        onClick={() => setFormData({ ...formData, mediaType: formData.mediaType === 'carousel' ? null : 'carousel' })}
+                                        whileHover={{ scale: 1.02 }}
+                                        whileTap={{ scale: 0.98 }}
+                                    >
+                                        <HiPhoto size={16} /> Carousel
+                                    </motion.button>
+                                </div>
+                                {formData.mediaType === 'youtube' && (
+                                    <input
+                                        type="text"
+                                        style={styles.input}
+                                        value={formData.youtubeUrl}
+                                        onChange={e => setFormData({ ...formData, youtubeUrl: e.target.value })}
+                                        placeholder="https://youtu.be/... or youtube.com/watch?v=..."
+                                    />
+                                )}
+                                {formData.mediaType === 'carousel' && (
+                                    <input
+                                        type="text"
+                                        style={styles.input}
+                                        value={formData.carouselImages}
+                                        onChange={e => setFormData({ ...formData, carouselImages: e.target.value })}
+                                        placeholder='["url1","url2","url3"] - JSON array of image URLs'
+                                    />
+                                )}
                             </div>
                         </div>
 

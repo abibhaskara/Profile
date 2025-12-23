@@ -231,6 +231,57 @@ const BlogPostPage = () => {
                 </div>
             </motion.div>
 
+            {/* Post Media Section */}
+            {post.mediaType && (post.youtubeUrl || post.carouselImages) && (
+                <motion.div
+                    className="container"
+                    style={{ marginTop: '-20px', marginBottom: '40px', position: 'relative', zIndex: 15 }}
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.4 }}
+                >
+                    {post.mediaType === 'youtube' && post.youtubeUrl && (() => {
+                        let embedUrl = post.youtubeUrl;
+                        if (embedUrl.includes('youtu.be/')) {
+                            const videoId = embedUrl.split('youtu.be/')[1].split('?')[0];
+                            embedUrl = `https://www.youtube.com/embed/${videoId}`;
+                        } else if (embedUrl.includes('watch?v=')) {
+                            const videoId = embedUrl.split('watch?v=')[1].split('&')[0];
+                            embedUrl = `https://www.youtube.com/embed/${videoId}`;
+                        }
+                        return (
+                            <div style={{ borderRadius: '16px', overflow: 'hidden', aspectRatio: '16/9', maxWidth: '900px', margin: '0 auto' }}>
+                                <iframe
+                                    src={embedUrl}
+                                    style={{ width: '100%', height: '100%', border: 'none' }}
+                                    title="Post Video"
+                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                    allowFullScreen
+                                />
+                            </div>
+                        );
+                    })()}
+                    {post.mediaType === 'carousel' && post.carouselImages && (() => {
+                        try {
+                            const images = typeof post.carouselImages === 'string' ? JSON.parse(post.carouselImages) : post.carouselImages;
+                            if (!Array.isArray(images) || images.length === 0) return null;
+                            return (
+                                <div style={{ display: 'flex', gap: '16px', overflowX: 'auto', padding: '8px 0' }}>
+                                    {images.map((img, idx) => (
+                                        <img
+                                            key={idx}
+                                            src={img}
+                                            alt={`Slide ${idx + 1}`}
+                                            style={{ height: '300px', borderRadius: '12px', objectFit: 'cover' }}
+                                        />
+                                    ))}
+                                </div>
+                            );
+                        } catch { return null; }
+                    })()}
+                </motion.div>
+            )}
+
             <motion.div
                 className="container post-body-container"
                 initial={{ opacity: 0, y: 40 }}

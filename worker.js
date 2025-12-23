@@ -14,6 +14,10 @@ const posts = sqliteTable('posts', {
     image: text('image'),
     tags: text('tags'),
     createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+    // Per-post media settings
+    mediaType: text('media_type'), // 'youtube' | 'carousel' | null
+    youtubeUrl: text('youtube_url'),
+    carouselImages: text('carousel_images'), // JSON array
 });
 
 // Settings table for site configuration
@@ -47,6 +51,20 @@ async function ensureSettingsTable(env) {
             value TEXT NOT NULL
         )
     `);
+}
+
+// Ensure posts table has media columns (for existing databases)
+async function ensurePostsColumns(env) {
+    const client = getClient(env);
+    // Add columns if they don't exist (SQLite will error if column exists, so we use try-catch)
+    const columns = ['media_type', 'youtube_url', 'carousel_images'];
+    for (const col of columns) {
+        try {
+            await client.execute(`ALTER TABLE posts ADD COLUMN ${col} TEXT`);
+        } catch (e) {
+            // Column likely already exists, ignore
+        }
+    }
 }
 
 function setCorsHeaders(res) {
@@ -148,15 +166,18 @@ export default {
 
         // 2. Posts List / Create
         if (path === '/api/posts') {
-            const db = getDb(env);
             try {
+                // Ensure posts table has media columns
+                await ensurePostsColumns(env);
+                const db = getDb(env);
+
                 if (method === 'GET') {
                     const allPosts = await db.select().from(posts).orderBy(desc(posts.createdAt));
                     return jsonResponse(allPosts);
                 }
                 if (method === 'POST') {
                     const body = await request.json();
-                    const { slug, title, content, description, image, tags } = body;
+                    const { slug, title, content, description, image, tags, mediaType, youtubeUrl, carouselImages } = body;
 
                     if (!slug || !title || !content) {
                         return errorResponse('Missing required fields', 400);
@@ -170,6 +191,9 @@ export default {
                         image: image || '',
                         tags: tags || '[]',
                         createdAt: new Date(),
+                        mediaType: mediaType || null,
+                        youtubeUrl: youtubeUrl || null,
+                        carouselImages: carouselImages || null,
                     }).returning();
 
                     return jsonResponse(newPost[0], 201);
