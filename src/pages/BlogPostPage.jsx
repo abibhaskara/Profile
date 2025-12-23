@@ -310,7 +310,7 @@ const BlogPostPage = () => {
             >
                 {/* Post Media Section - inside body container for consistent padding */}
                 {post.mediaType && (post.youtubeUrl || post.carouselImages) && (
-                    <div style={{ marginBottom: '32px' }}>
+                    <div style={{ marginBottom: '48px' }}>
                         {post.mediaType === 'youtube' && post.youtubeUrl && (() => {
                             let embedUrl = post.youtubeUrl;
                             if (embedUrl.includes('youtu.be/')) {
