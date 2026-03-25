@@ -5,10 +5,11 @@ import { motion } from 'framer-motion';
 import { HiPlus, HiPencil, HiTrash, HiCheck, HiXMark, HiCloudArrowUp, HiPhoto, HiVideoCamera, HiChartBar, HiDocumentText, HiCog, HiEye, HiCalendar, HiTrophy } from 'react-icons/hi2';
 
 // API URLs
-const API_BASE = import.meta.env.DEV ? 'http://localhost:3001/api/posts' : '/api/posts';
-const SETTINGS_API = import.meta.env.DEV ? 'http://localhost:3001/api/settings' : '/api/settings';
-const UPLOAD_API = import.meta.env.DEV ? 'http://localhost:3001/api/upload' : '/api/upload';
-const ANALYTICS_API = import.meta.env.DEV ? 'http://localhost:3001/api/analytics' : '/api/analytics';
+const API_BASE = '/api/posts';
+const SETTINGS_API = '/api/settings';
+const UPLOAD_API = '/api/upload';
+const ANALYTICS_API = '/api/analytics';
+const ACHIEVEMENTS_API = '/api/achievements';
 
 const AdminPage = () => {
     const [posts, setPosts] = useState([]);
@@ -45,6 +46,20 @@ const AdminPage = () => {
         topPosts: []
     });
 
+    // Achievements State
+    const [achievements, setAchievements] = useState([]);
+    const [isAchievementEditing, setIsAchievementEditing] = useState(false);
+    const [achievementFormData, setAchievementFormData] = useState({
+        title: '',
+        description: '',
+        year: '',
+        category: 'competition',
+        icon: 'FaMedal',
+        image: '',
+        link: '',
+        order: 0
+    });
+
     // Mobile Tab State
     const [activeTab, setActiveTab] = useState('dashboard');
 
@@ -78,7 +93,21 @@ const AdminPage = () => {
         fetchPosts();
         fetchHeaderSettings();
         fetchAnalytics();
+        fetchAchievements();
     }, []);
+
+    // Fetch achievements
+    const fetchAchievements = async () => {
+        try {
+            const res = await fetch(ACHIEVEMENTS_API);
+            if (res.ok) {
+                const data = await res.json();
+                setAchievements(data);
+            }
+        } catch (err) {
+            console.error("Failed to fetch achievements:", err);
+        }
+    };
 
     // Fetch blog header settings
     const fetchHeaderSettings = async () => {
@@ -141,6 +170,56 @@ const AdminPage = () => {
         });
         setOriginalSlug(post.slug);
         setIsEditing(true);
+    };
+
+    // Achievement Handlers
+    const resetAchievementForm = () => {
+        setAchievementFormData({
+            title: '',
+            description: '',
+            year: '',
+            category: 'competition',
+            icon: 'FaMedal',
+            image: '',
+            link: '',
+            order: 0
+        });
+        setIsAchievementEditing(false);
+    };
+
+    const handleAchievementEdit = (achievement) => {
+        setAchievementFormData(achievement);
+        setIsAchievementEditing(true);
+    };
+
+    const handleAchievementDelete = async (id) => {
+        if (!confirm('Are you sure you want to delete this achievement?')) return;
+        await fetch(`${ACHIEVEMENTS_API}/${id}`, { method: 'DELETE' });
+        fetchAchievements();
+    };
+
+    const handleAchievementSubmit = async (e) => {
+        e.preventDefault();
+        const method = achievementFormData.id ? 'PUT' : 'POST';
+        const url = achievementFormData.id ? `${ACHIEVEMENTS_API}/${achievementFormData.id}` : ACHIEVEMENTS_API;
+
+        try {
+            const res = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(achievementFormData)
+            });
+            if (res.ok) {
+                alert('Achievement saved!');
+                resetAchievementForm();
+                fetchAchievements();
+            } else {
+                alert('Failed to save achievement');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Error saving achievement');
+        }
     };
 
     const handleDelete = async (slug) => {
@@ -310,45 +389,42 @@ const AdminPage = () => {
             marginBottom: '48px',
             color: 'var(--text-primary)'
         },
-        grid: {
-            display: 'grid',
-            gridTemplateColumns: '1fr',
+        gridLarge: {
+            display: 'flex',
+            flexDirection: 'column',
             gap: '32px'
         },
-        gridLarge: {
-            display: 'grid',
-            gridTemplateColumns: '350px 1fr',
-            gap: '48px'
-        },
-        // Mobile Tab Navigation
+        // Tab Navigation (Horizontal Top Bar)
         tabNav: {
             display: 'flex',
-            gap: '8px',
-            marginBottom: '24px',
-            background: 'var(--glass-surface)',
-            padding: '6px',
-            borderRadius: '12px',
-            border: '1px solid var(--border)'
+            gap: '12px',
+            marginBottom: '48px',
+            background: 'rgba(255, 255, 255, 0.03)',
+            padding: '8px',
+            borderRadius: '16px',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            backdropFilter: 'blur(10px)',
+            maxWidth: 'fit-content'
         },
         tabButton: {
-            flex: 1,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '6px',
-            padding: '10px 12px',
+            gap: '8px',
+            padding: '12px 24px',
             background: 'transparent',
             border: 'none',
-            borderRadius: '8px',
+            borderRadius: '12px',
             color: 'var(--text-secondary)',
-            fontSize: '13px',
-            fontWeight: '500',
+            fontSize: '14px',
+            fontWeight: '600',
             cursor: 'pointer',
-            transition: 'all 0.2s'
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
         },
         tabActive: {
-            background: 'var(--accent)',
-            color: 'white'
+            background: '#ff4d4d', // Vibrant red as in the image
+            color: 'white',
+            boxShadow: '0 4px 15px rgba(255, 77, 77, 0.3)'
         },
         // Stats Grid
         statsGrid: {
@@ -416,8 +492,14 @@ const AdminPage = () => {
             fontWeight: '500'
         },
         sidebar: {
-            borderRight: '1px solid var(--border)',
-            paddingRight: '32px'
+            // Now used as the list container
+            width: '100%'
+        },
+        sectionHeader: {
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '24px'
         },
         sidebarHeader: {
             display: 'flex',
@@ -456,11 +538,12 @@ const AdminPage = () => {
         },
         postCard: {
             padding: '16px',
-            background: 'var(--glass-surface)',
+            background: 'rgba(255, 255, 255, 0.02)',
             border: '1px solid var(--border)',
+            borderLeft: '4px solid transparent',
             borderRadius: '16px',
             marginBottom: '12px',
-            transition: 'border-color 0.2s, background 0.2s'
+            transition: 'all 0.2s ease-in-out'
         },
         postTitle: {
             fontWeight: '600',
@@ -651,34 +734,39 @@ const AdminPage = () => {
                 📊 Admin Dashboard
             </motion.h1>
 
-            {/* Mobile Tab Navigation */}
-            {!isDesktop && (
-                <div style={styles.tabNav}>
-                    <button
-                        style={{ ...styles.tabButton, ...(activeTab === 'dashboard' ? styles.tabActive : {}) }}
-                        onClick={() => setActiveTab('dashboard')}
-                    >
-                        <HiChartBar size={16} /> Stats
-                    </button>
-                    <button
-                        style={{ ...styles.tabButton, ...(activeTab === 'posts' ? styles.tabActive : {}) }}
-                        onClick={() => setActiveTab('posts')}
-                    >
-                        <HiDocumentText size={16} /> Posts
-                    </button>
-                    <button
-                        style={{ ...styles.tabButton, ...(activeTab === 'settings' ? styles.tabActive : {}) }}
-                        onClick={() => setActiveTab('settings')}
-                    >
-                        <HiCog size={16} /> Settings
-                    </button>
-                </div>
-            )}
+            {/* Tab Navigation (Unified for both Mobile & Desktop) */}
+            <div style={styles.tabNav}>
+                <button
+                    style={{ ...styles.tabButton, ...(activeTab === 'dashboard' ? styles.tabActive : {}) }}
+                    onClick={() => setActiveTab('dashboard')}
+                >
+                    <HiChartBar size={16} /> Stats
+                </button>
+                <button
+                    style={{ ...styles.tabButton, ...(activeTab === 'posts' ? styles.tabActive : {}) }}
+                    onClick={() => setActiveTab('posts')}
+                >
+                    <HiDocumentText size={16} /> Posts
+                </button>
+                <button
+                    style={{ ...styles.tabButton, ...(activeTab === 'settings' ? styles.tabActive : {}) }}
+                    onClick={() => setActiveTab('settings')}
+                >
+                    <HiCog size={16} /> Settings
+                </button>
+                <button
+                    style={{ ...styles.tabButton, ...(activeTab === 'achievements' ? styles.tabActive : {}) }}
+                    onClick={() => setActiveTab('achievements')}
+                >
+                    <HiTrophy size={16} /> Achievements
+                </button>
+            </div>
 
-            {/* Stats Cards - Always show on desktop, or when dashboard tab active on mobile */}
-            {(isDesktop || activeTab === 'dashboard') && (
-                <motion.div
-                    style={styles.statsGrid}
+            {/* Dashboard Content (Stats & Popular Posts) */}
+            {activeTab === 'dashboard' && (
+                <>
+                    <motion.div
+                        style={styles.statsGrid}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.1 }}
@@ -698,11 +786,12 @@ const AdminPage = () => {
                         <div style={styles.statValue}>{analytics.totalPosts}</div>
                         <div style={styles.statLabel}>Posts</div>
                     </div>
-                </motion.div>
+                    </motion.div>
+                </>
             )}
 
-            {/* Top 5 Popular Posts - Always show on desktop, or when dashboard tab active on mobile */}
-            {(isDesktop || activeTab === 'dashboard') && analytics.topPosts.length > 0 && (
+            {/* Dashboard Popular Posts */}
+            {activeTab === 'dashboard' && analytics.topPosts.length > 0 && (
                 <motion.div
                     style={styles.topPostsSection}
                     initial={{ opacity: 0, y: 20 }}
@@ -723,15 +812,15 @@ const AdminPage = () => {
             )}
 
             <div style={isDesktop ? styles.gridLarge : styles.grid}>
-                {/* Sidebar - Posts List - Show on desktop or when posts tab active on mobile */}
-                {(isDesktop || activeTab === 'posts') && (
+                {/* Posts Management Section */}
+                {activeTab === 'posts' && (
                     <motion.div
                         style={isDesktop ? styles.sidebar : {}}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.5, delay: 0.1 }}
                     >
-                        <div style={styles.sidebarHeader}>
+                        <div style={styles.sectionHeader}>
                             <h2 style={styles.sectionTitle}>Posts ({posts.length})</h2>
                             <motion.button
                                 style={styles.addButton}
@@ -783,8 +872,8 @@ const AdminPage = () => {
                     </motion.div>
                 )}
 
-                {/* Main - Editor Form - Show on desktop or when posts tab active on mobile */}
-                {(isDesktop || activeTab === 'posts') && (
+                {/* Posts Editor Form */}
+                {activeTab === 'posts' && (
                     <motion.div
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -1007,10 +1096,311 @@ Use **bold** or *italic* text.
                         </form>
                     </motion.div>
                 )}
+
+                {/* Achievements Management Section */}
+                {activeTab === 'achievements' && (
+                    <div style={{ ... (isDesktop ? styles.gridLarge : styles.grid), marginTop: '0' }}>
+                        <motion.div
+                            style={isDesktop ? styles.sidebar : {}}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.5, delay: 0.1 }}
+                        >
+                            <div style={styles.sectionHeader}>
+                                <h2 style={styles.sectionTitle}>Achievements ({achievements.length})</h2>
+                                <motion.button
+                                    type="button"
+                                    style={styles.addButton}
+                                    onClick={resetAchievementForm}
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    title="Add new achievement"
+                                >
+                                    <HiPlus size={18} />
+                                </motion.button>
+                            </div>
+
+                            <div style={{ maxHeight: isDesktop ? '600px' : 'auto', overflowY: isDesktop ? 'auto' : 'visible', paddingRight: '8px' }}>
+                                {achievements.length === 0 ? (
+                                    <div style={styles.emptyState}>
+                                        No achievements yet. Add your first achievement!
+                                    </div>
+                                ) : (
+                                    achievements.sort((a,b) => (a.order || 0) - (b.order || 0)).map(achievement => {
+                                        const categoryColor = 
+                                            achievement.category === 'competition' ? '#60a5fa' : 
+                                            achievement.category === 'organization' ? '#34d399' : 
+                                            achievement.category === 'projects' ? '#a78bfa' : 'var(--accent)';
+
+                                        return (
+                                            <motion.div
+                                                key={achievement.id}
+                                                style={{ 
+                                                    ...styles.postCard, 
+                                                    borderColor: achievementFormData.id === achievement.id ? 'var(--accent)' : 'var(--border)',
+                                                    borderLeftColor: categoryColor,
+                                                    background: achievementFormData.id === achievement.id ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.02)'
+                                                }}
+                                                whileHover={{ borderColor: 'var(--accent)', background: 'rgba(255,255,255,0.05)' }}
+                                            >
+                                                <div style={styles.postTitle}>{achievement.title}</div>
+                                                <div style={styles.postSlug}>
+                                                    <span style={{ color: categoryColor, fontWeight: '600', textTransform: 'capitalize' }}>{achievement.category}</span>
+                                                    {' | '}
+                                                    <span style={{ color: 'var(--text-muted)' }}>{achievement.year}</span>
+                                                </div>
+                                                <div style={styles.buttonGroup}>
+                                                <motion.button
+                                                    type="button"
+                                                    style={styles.editButton}
+                                                    onClick={() => handleAchievementEdit(achievement)}
+                                                    whileHover={{ background: 'rgba(59, 130, 246, 0.25)' }}
+                                                    whileTap={{ scale: 0.98 }}
+                                                >
+                                                    <HiPencil size={14} /> Edit
+                                                </motion.button>
+                                                <motion.button
+                                                    type="button"
+                                                    style={styles.deleteButton}
+                                                    onClick={() => handleAchievementDelete(achievement.id)}
+                                                    whileHover={{ background: 'rgba(239, 68, 68, 0.25)' }}
+                                                    whileTap={{ scale: 0.98 }}
+                                                >
+                                                    <HiTrash size={14} />
+                                                </motion.button>
+                                            </div>
+                                        </motion.div>
+                                    );
+                                })
+                            )}
+                            </div>
+                        </motion.div>
+
+                        {/* Achievement Editor Form */}
+                        <motion.div
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.5, delay: 0.2 }}
+                            style={isDesktop ? { flex: 1 } : {}}
+                        >
+                            <h2 style={{ ...styles.sectionTitle, marginBottom: '24px' }}>
+                                {achievementFormData.id ? '✏️ Edit Achievement' : '✨ Add New Achievement'}
+                            </h2>
+
+                            <form onSubmit={handleAchievementSubmit} style={{ ...styles.form, padding: '32px', background: 'var(--glass-surface)', borderRadius: '24px', border: '1px solid var(--border)' }}>
+                                <div style={{ marginBottom: '16px' }}>
+                                    <h2 style={{ ...styles.sectionTitle, fontSize: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        {achievementFormData.id ? <HiPencil size={20} /> : <HiPlus size={20} />}
+                                        {achievementFormData.id ? 'Edit Achievement' : 'Add New Achievement'}
+                                    </h2>
+                                </div>
+
+                                <div style={styles.formGroup}>
+                                    <label style={styles.label}>Title *</label>
+                                    <input
+                                        type="text"
+                                        style={styles.input}
+                                        value={achievementFormData.title}
+                                        onChange={e => setAchievementFormData({ ...achievementFormData, title: e.target.value })}
+                                        placeholder="Achievement title"
+                                        required
+                                    />
+                                </div>
+
+                                <div style={styles.formRow}>
+                                    <div style={styles.formGroup}>
+                                        <label style={styles.label}>Category *</label>
+                                        <select
+                                            style={styles.input}
+                                            value={achievementFormData.category}
+                                            onChange={e => setAchievementFormData({ ...achievementFormData, category: e.target.value })}
+                                            required
+                                        >
+                                            <option value="competition">Competition</option>
+                                            <option value="organization">Organization</option>
+                                            <option value="projects">Projects</option>
+                                        </select>
+                                    </div>
+                                    <div style={styles.formGroup}>
+                                        <label style={styles.label}>Year/Period *</label>
+                                        <input
+                                            type="text"
+                                            style={styles.input}
+                                            value={achievementFormData.year}
+                                            onChange={e => setAchievementFormData({ ...achievementFormData, year: e.target.value })}
+                                            placeholder="e.g. 2025"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                <div style={styles.formGroup}>
+                                    <label style={styles.label}>Description *</label>
+                                    <textarea
+                                        style={{ ...styles.textarea, minHeight: '120px' }}
+                                        value={achievementFormData.description}
+                                        onChange={e => setAchievementFormData({ ...achievementFormData, description: e.target.value })}
+                                        placeholder="Detailed description of your achievement..."
+                                        required
+                                    />
+                                </div>
+
+                                <div style={styles.formRow}>
+                                    <div style={styles.formGroup}>
+                                        <label style={styles.label}>Icon Component</label>
+                                        <select
+                                            style={styles.input}
+                                            value={achievementFormData.icon}
+                                            onChange={e => setAchievementFormData({ ...achievementFormData, icon: e.target.value })}
+                                        >
+                                            <option value="HiTrophy">Trophy (HiTrophy)</option>
+                                            <option value="FaMedal">Medal (FaMedal)</option>
+                                            <option value="FaAward">Award (FaAward)</option>
+                                            <option value="HiStar">Star (HiStar)</option>
+                                            <option value="HiAcademicCap">Cap (HiAcademicCap)</option>
+                                            <option value="FaCode">Code (FaCode)</option>
+                                            <option value="FaUsers">Users (FaUsers)</option>
+                                        </select>
+                                    </div>
+                                    <div style={styles.formGroup}>
+                                        <label style={styles.label}>Order (Lower = First)</label>
+                                        <input
+                                            type="number"
+                                            style={styles.input}
+                                            value={achievementFormData.order}
+                                            onChange={e => setAchievementFormData({ ...achievementFormData, order: parseInt(e.target.value) || 0 })}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div style={styles.formGroup}>
+                                    <label style={styles.label}>Image URL</label>
+                                    <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', flexWrap: isDesktop ? 'nowrap' : 'wrap' }}>
+                                        <div style={{ flex: 1, minWidth: '200px' }}>
+                                            <input
+                                                type="text"
+                                                style={styles.input}
+                                                value={achievementFormData.image}
+                                                onChange={e => setAchievementFormData({ ...achievementFormData, image: e.target.value })}
+                                                placeholder="/achievements/image.png"
+                                            />
+                                            {achievementFormData.image && (
+                                                <div style={{ marginTop: '12px' }}>
+                                                    <img
+                                                        src={achievementFormData.image}
+                                                        alt="Preview"
+                                                        style={{
+                                                            width: '100%',
+                                                            maxHeight: '150px',
+                                                            borderRadius: '12px',
+                                                            border: '1px solid var(--border)',
+                                                            objectFit: 'cover'
+                                                        }}
+                                                        onError={(e) => e.target.style.display = 'none'}
+                                                    />
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                onChange={async (e) => {
+                                                    const file = e.target.files?.[0];
+                                                    if (!file) return;
+                                                    setIsUploading(true);
+                                                    try {
+                                                        const reader = new FileReader();
+                                                        reader.onload = async () => {
+                                                            const res = await fetch(UPLOAD_API, {
+                                                                method: 'POST',
+                                                                headers: { 'Content-Type': 'application/json' },
+                                                                body: JSON.stringify({ image: reader.result })
+                                                            });
+                                                            if (res.ok) {
+                                                                const data = await res.json();
+                                                                setAchievementFormData(prev => ({ ...prev, image: data.url }));
+                                                            } else {
+                                                                alert('Upload failed');
+                                                            }
+                                                            setIsUploading(false);
+                                                        };
+                                                        reader.readAsDataURL(file);
+                                                    } catch (err) {
+                                                        console.error(err);
+                                                        setIsUploading(false);
+                                                    }
+                                                }}
+                                                style={{ display: 'none' }}
+                                                id="ach-image-upload"
+                                            />
+                                            <motion.label
+                                                htmlFor="ach-image-upload"
+                                                style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    gap: '8px',
+                                                    padding: '12px 24px',
+                                                    background: isUploading ? 'rgba(255,255,255,0.05)' : 'var(--accent)',
+                                                    color: 'white',
+                                                    borderRadius: '12px',
+                                                    fontSize: '14px',
+                                                    fontWeight: '600',
+                                                    cursor: isUploading ? 'wait' : 'pointer',
+                                                    whiteSpace: 'nowrap',
+                                                    height: '46px'
+                                                }}
+                                                whileHover={!isUploading ? { scale: 1.02, background: 'var(--accent-hover)' } : {}}
+                                                whileTap={!isUploading ? { scale: 0.98 } : {}}
+                                            >
+                                                {isUploading ? (
+                                                    <div style={{ width: '18px', height: '18px', border: '2px solid white', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                                                ) : <HiCloudArrowUp size={20} />}
+                                                {isUploading ? 'Uploading...' : 'Upload Image'}
+                                            </motion.label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style={styles.formGroup}>
+                                    <label style={styles.label}>External Link (Optional)</label>
+                                    <input
+                                        type="text"
+                                        style={styles.input}
+                                        value={achievementFormData.link}
+                                        onChange={e => setAchievementFormData({ ...achievementFormData, link: e.target.value })}
+                                        placeholder="https://github.com/... or https://youtube.com/..."
+                                    />
+                                </div>
+
+                                <div style={{ ...styles.formActions, marginTop: '24px' }}>
+                                    <motion.button
+                                        type="button"
+                                        style={styles.cancelButton}
+                                        onClick={resetAchievementForm}
+                                        whileHover={{ background: 'rgba(255,255,255,0.05)', color: 'var(--text-primary)' }}
+                                        whileTap={{ scale: 0.98 }}
+                                    >
+                                        <HiXMark size={16} /> Cancel
+                                    </motion.button>
+                                    <motion.button
+                                        type="submit"
+                                        style={styles.submitButton}
+                                        whileHover={{ transform: 'translateY(-2px)', boxShadow: '0 8px 24px rgba(239, 68, 68, 0.3)' }}
+                                        whileTap={{ scale: 0.98 }}
+                                    >
+                                        <HiCheck size={16} /> {achievementFormData.id ? 'Update Achievement' : 'Save Achievement'}
+                                    </motion.button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
             </div>
 
-            {/* Blog Header Settings Section - Show on desktop or when settings tab active on mobile */}
-            {(isDesktop || activeTab === 'settings') && (
+            {/* Blog Header Settings Section */}
+            {activeTab === 'settings' && (
                 <motion.div
                     style={{ marginTop: '64px', padding: '32px', background: 'var(--glass-surface)', border: '1px solid var(--border)', borderRadius: '24px' }}
                     initial={{ opacity: 0, y: 20 }}

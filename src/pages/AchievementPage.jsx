@@ -3,116 +3,20 @@ import { useState } from 'react';
 import { HiTrophy, HiStar, HiAcademicCap, HiArrowTopRightOnSquare } from 'react-icons/hi2';
 import { FaMedal, FaAward, FaCode, FaUsers } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useEffect } from 'react';
 
-const achievements = {
-    competition: [
-        {
-            title: "Silver Medalist - Thailand Inventors' Day",
-            description: "Invented Peel and Petal, a paper soap made from butterfly pea flowers and leftover orange peels. It helps the environment by turning organic waste into a useful, natural product.",
-            year: "2025",
-            icon: FaMedal,
-            image: "/achievements/Silver Medalist - Thailand Inventors' Day.jpeg"
-        },
-        {
-            title: "Silver Medalist - Japan Design, Idea, and Invention Expo",
-            description: "Invented GESTIC AI, AI-powered software that translates sign language using a standard computer. It focuses on recognizing single gestures, such as letters, one by one.",
-            year: "2025",
-            icon: FaMedal,
-            image: "/achievements/Silver Medalist - Japan Design, Idea, and Invention Expo.jpeg"
-        },
-        {
-            title: "Gold Medal - World Youth Invention and Innovation Award",
-            description: "CINCA is a natural anti-fungal innovation derived from Green Grass Jelly leaves, designed to combat skin infections caused by floodwaters.",
-            year: "2025",
-            icon: HiTrophy,
-            image: "/achievements/Gold Medal - World Youth Invention and Innovation Award.jpeg"
-        },
-        {
-            title: "Gold Medal - International Science and Invention Fair",
-            description: "Invented GESTIC AI 2.0, a web-based AI application that utilizes standard devices to translate real-time sign language into text and sound with 95% accuracy.",
-            year: "2025",
-            icon: HiTrophy,
-            image: "/achievements/Gold Medal - International Science and Invention Fair.png"
-        },
-        {
-            title: "Most Outstanding Student in ICT",
-            description: "Awarded at graduation, recognizing exceptional technical proficiency and advanced coding capabilities.",
-            year: "2024",
-            icon: HiAcademicCap,
-            image: "/achievements/Most Outstanding Student in ICT.png"
-        },
-        {
-            title: "Junior High School Top Academic Achiever",
-            description: "Consistently achieved the 1st rank across all semesters, maintaining the highest academic standing throughout the entire Junior High School tenure.",
-            year: "2024",
-            icon: HiAcademicCap,
-            image: "/achievements/Junior High School Top Academic Achiever.png"
-        },
-        {
-            title: "Winner of Siswa Siswi Berprestasi",
-            description: "Led community empowerment efforts in Bali under the 'Motivation for Education' vision.",
-            year: "2022",
-            icon: FaAward,
-            image: "/achievements/Winner of Siswa Siswi Berprestasi.png"
-        }
-    ],
-    organization: [
-        {
-            title: "Titik Awal Volunteer",
-            description: "As a Creative Team member, I drove community engagement through strategic visual storytelling and impactful media.",
-            year: "2025 - Present",
-            icon: FaUsers,
-            image: "/achievements/Titik Awal Volunteer.JPG"
-        },
-        {
-            title: "SatuPadu Volunteer",
-            description: "Volunteered at Penarukan refugee location to promote education equality, creating gamification materials and teaching English & ICT.",
-            year: "2025",
-            icon: FaUsers,
-            image: "/achievements/SatuPadu Volunteer.JPG"
-        },
-        {
-            title: "Student Council President",
-            description: "Student Council President Taman Rama Junior High School 2023/2024. Spearheaded over 10 strategic initiatives designed to enhance the quality of education and boost student motivation within the school environment.",
-            year: "2023 - 2024",
-            icon: HiStar,
-            image: "/achievements/Student Council President.jpeg"
-        },
-        {
-            title: "Duta Pendidikan Provinsi Bali",
-            description: "Driven by 'Motivation for Education', spearheaded initiatives to empower communities and elevate regional educational quality.",
-            year: "2022 - 2023",
-            icon: FaAward,
-            image: "/achievements/Duta Pendidikan Provinsi Bali.jpeg"
-        }
-    ],
-    projects: [
-        {
-            title: "Fit+",
-            description: "An AI-powered lifestyle platform developed to help reduce diabetes rates by promoting healthier habits and personalized wellness recommendations.",
-            year: "2025",
-            icon: FaCode,
-            image: "/achievements/FIT+.png",
-            link: "https://fitplus-bernouli.netlify.app"
-        },
-        {
-            title: "GESTIC AI",
-            description: "AI-powered tool for recognizing sign language gestures and translating them to text.",
-            year: "2025",
-            icon: FaCode,
-            image: "/achievements/GESTIC AI.png",
-            link: "https://youtu.be/RhhVEGrfw40?si=oUz03HbNeFa2gYCi"
-        },
-        {
-            title: "Peel and Petal",
-            description: "Eco-friendly paper soap innovation reducing organic waste and promoting sustainable hygiene habits.",
-            year: "2024",
-            icon: HiStar,
-            image: "/achievements/Peel and Petal.png",
-            link: "https://youtu.be/KMP-H8RE7sE?si=3l-W3uMxEdFTiHPo"
-        }
-    ]
+// Icon mapping for dynamic icons from CMS
+const ICON_MAP = {
+    HiTrophy, HiStar, HiAcademicCap, HiArrowTopRightOnSquare,
+    FaMedal, FaAward, FaCode, FaUsers
 };
+
+const DEFAULT_ICON = FaAward;
+function getIcon(name) {
+    return ICON_MAP[name] || DEFAULT_ICON;
+}
+
+const ACHIEVEMENTS_API = '/api/achievements';
 
 const itemTweens = {
     hidden: { opacity: 0, y: 20 },
@@ -146,7 +50,36 @@ const getYouTubeEmbedUrl = (url) => {
 };
 
 const AchievementPage = () => {
+    const [achievementsByCat, setAchievementsByCat] = useState({
+        competition: [],
+        organization: [],
+        projects: []
+    });
+    const [isLoading, setIsLoading] = useState(true);
     const [activeVideo, setActiveVideo] = useState(null);
+
+    useEffect(() => {
+        const fetchAchievements = async () => {
+            try {
+                const res = await fetch(ACHIEVEMENTS_API);
+                if (res.ok) {
+                    const data = await res.json();
+                    const grouped = data.reduce((acc, item) => {
+                        if (!acc[item.category]) acc[item.category] = [];
+                        acc[item.category].push(item);
+                        return acc;
+                    }, { competition: [], organization: [], projects: [] });
+                    setAchievementsByCat(grouped);
+                }
+            } catch (error) {
+                console.error("Failed to fetch achievements:", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchAchievements();
+    }, []);
 
     const handleProjectClick = (link) => {
         const embedUrl = getYouTubeEmbedUrl(link);
@@ -197,11 +130,14 @@ const AchievementPage = () => {
                         initial="hidden"
                         animate="show" // Force immediate load for first section
                     >
-                        {achievements.organization.map((item, index) => (
-                            <motion.div
-                                key={index}
-                                className="achievement-item project-card"
-                                variants={itemTweens}
+                        {achievementsByCat.organization.map((item, index) => {
+                            const Icon = getIcon(item.icon);
+                            return (
+                                <motion.div
+                                    key={item.id || index}
+                                    className="achievement-item project-card"
+                                    variants={itemTweens}
+                                    // ... existing props
                                 whileHover={{
                                     y: -8,
                                     backgroundColor: "rgba(255, 255, 255, 0.03)",
@@ -218,12 +154,13 @@ const AchievementPage = () => {
                                     <div className="project-meta">
                                         <motion.span className="achievement-year" variants={textTweens}>{item.year}</motion.span>
                                         <div className="project-icon-wrapper">
-                                            <item.icon size={20} color="var(--accent)" />
+                                            <Icon size={20} color="var(--accent)" />
                                         </div>
                                     </div>
                                 </div>
-                            </motion.div>
-                        ))}
+                                </motion.div>
+                            );
+                        })}
                     </motion.div>
                 </div>
             </section>
@@ -257,11 +194,14 @@ const AchievementPage = () => {
                         whileInView="show"
                         viewport={{ once: true, amount: 0.1 }}
                     >
-                        {achievements.competition.map((item, index) => (
-                            <motion.div
-                                key={index}
-                                className="achievement-item project-card"
-                                variants={itemTweens}
+                        {achievementsByCat.competition.map((item, index) => {
+                            const Icon = getIcon(item.icon);
+                            return (
+                                <motion.div
+                                    key={item.id || index}
+                                    className="achievement-item project-card"
+                                    variants={itemTweens}
+                                    // ...
                                 whileHover={{
                                     y: -8,
                                     backgroundColor: "rgba(255, 255, 255, 0.03)",
@@ -278,12 +218,13 @@ const AchievementPage = () => {
                                     <div className="project-meta">
                                         <motion.span className="achievement-year" variants={textTweens}>{item.year}</motion.span>
                                         <div className="project-icon-wrapper">
-                                            <item.icon size={20} color="var(--accent)" />
+                                            <Icon size={20} color="var(--accent)" />
                                         </div>
                                     </div>
                                 </div>
-                            </motion.div>
-                        ))}
+                                </motion.div>
+                            );
+                        })}
                     </motion.div>
                 </div>
             </section>
@@ -317,11 +258,14 @@ const AchievementPage = () => {
                         whileInView="show"
                         viewport={{ once: true, amount: 0.1 }}
                     >
-                        {achievements.projects.map((item, index) => (
-                            <motion.div
-                                key={index}
-                                className="achievement-item project-card" // Added project-card class
-                                variants={itemTweens}
+                        {achievementsByCat.projects.map((item, index) => {
+                            const Icon = getIcon(item.icon);
+                            return (
+                                <motion.div
+                                    key={item.id || index}
+                                    className="achievement-item project-card"
+                                    variants={itemTweens}
+                                    // ...
                                 whileHover={{
                                     y: -8, // Lift up effect for cards
                                     backgroundColor: "rgba(255, 255, 255, 0.03)",
@@ -349,13 +293,14 @@ const AchievementPage = () => {
                                             </motion.button>
                                         ) : (
                                             <div className="project-icon-wrapper">
-                                                <item.icon size={20} color="var(--accent)" />
+                                                <Icon size={20} color="var(--accent)" />
                                             </div>
                                         )}
                                     </div>
                                 </div>
-                            </motion.div>
-                        ))}
+                                </motion.div>
+                            );
+                        })}
                     </motion.div>
                 </div>
             </section>

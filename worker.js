@@ -37,6 +37,20 @@ const analytics = sqliteTable('analytics', {
     date: text('date').notNull(), // YYYY-MM-DD for easy grouping
 });
 
+// Achievements table for CMS
+const achievements = sqliteTable('achievements', {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    title: text('title').notNull(),
+    description: text('description').notNull(),
+    year: text('year').notNull(),
+    category: text('category').notNull(), // competition, organization, projects
+    icon: text('icon'), // stored as component name string (e.g., 'FaMedal')
+    image: text('image'),
+    link: text('link'),
+    order: integer('order').default(0),
+    createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
+});
+
 // --- Helper Functions ---
 
 function getClient(env) {
@@ -48,7 +62,7 @@ function getClient(env) {
 
 function getDb(env) {
     const client = getClient(env);
-    return drizzle(client, { schema: { posts, settings } });
+    return drizzle(client, { schema: { posts, settings, achievements } });
 }
 
 // Ensure settings table exists
@@ -72,6 +86,25 @@ async function ensureAnalyticsTable(env) {
             path TEXT NOT NULL,
             timestamp INTEGER NOT NULL,
             date TEXT NOT NULL
+        )
+    `);
+}
+
+// Ensure achievements table exists
+async function ensureAchievementsTable(env) {
+    const client = getClient(env);
+    await client.execute(`
+        CREATE TABLE IF NOT EXISTS achievements (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            description TEXT NOT NULL,
+            year TEXT NOT NULL,
+            category TEXT NOT NULL,
+            icon TEXT,
+            image TEXT,
+            link TEXT,
+            "order" INTEGER DEFAULT 0,
+            created_at INTEGER NOT NULL
         )
     `);
 }
@@ -398,6 +431,74 @@ export default {
             } catch (err) {
                 console.error('Analytics API Error:', err);
                 return errorResponse(`Analytics error: ${err.message}`, 500);
+            }
+        }
+
+        // 6. Achievements Routes
+        if (path.startsWith('/api/achievements')) {
+            try {
+                await ensureAchievementsTable(env);
+                const db = getDb(env);
+
+                if (path === '/api/achievements' && method === 'GET') {
+                    const allAchievements = await db.select().from(achievements).orderBy(achievements.order, desc(achievements.createdAt));
+                    return jsonResponse(allAchievements);
+                }
+
+                if (path === '/api/achievements' && method === 'POST') {
+                    const body = await request.json();
+                    const { title, description, year, category, icon, image, link, order } = body;
+
+                    if (!title || !description || !year || !category) {
+                        return errorResponse('Missing required fields', 400);
+                    }
+
+                    const newAchievement = await db.insert(achievements).values({
+                        title: title.trim(),
+                        description,
+                        year: year.trim(),
+                        category,
+                        icon,
+                        image,
+                        link,
+                        order: order || 0,
+                        createdAt: new Date(),
+                    }).returning();
+
+                    return jsonResponse(newAchievement[0], 201);
+                }
+
+                // Single Achievement (ID-based)
+                const idMatch = path.match(/\/api\/achievements\/(\d+)$/);
+                if (idMatch) {
+                    const id = parseInt(idMatch[1]);
+                    if (method === 'GET') {
+                        const achievement = await db.select().from(achievements).where(eq(achievements.id, id)).limit(1);
+                        if (!achievement.length) return errorResponse('Achievement not found', 404);
+                        return jsonResponse(achievement[0]);
+                    }
+                    if (method === 'PUT') {
+                        const body = await request.json();
+                        const { id: _, createdAt: __, ...updateData } = body;
+
+                        const updated = await db.update(achievements)
+                            .set(updateData)
+                            .where(eq(achievements.id, id))
+                            .returning();
+
+                        if (!updated.length) return errorResponse('Achievement not found', 404);
+                        return jsonResponse(updated[0]);
+                    }
+                    if (method === 'DELETE') {
+                        await db.delete(achievements).where(eq(achievements.id, id));
+                        return new Response(null, { status: 204 });
+                    }
+                }
+
+                return errorResponse('Method not allowed', 405);
+            } catch (err) {
+                console.error('Achievements API Error:', err);
+                return errorResponse(`Achievements error: ${err.message}`, 500);
             }
         }
 

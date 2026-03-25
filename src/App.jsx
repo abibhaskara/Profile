@@ -38,6 +38,7 @@ function AppContent({ audioRef, isPlaying, setIsPlaying, hasStarted, setHasStart
   const location = useLocation();
   const isAdminPage = location.pathname === '/admin';
   const wasPlayingRef = useRef(false);
+  const isAutoPausedRef = useRef(false);
 
   // Auto-pause on admin page, resume when leaving
   useEffect(() => {
@@ -76,6 +77,28 @@ function AppContent({ audioRef, isPlaying, setIsPlaying, hasStarted, setHasStart
     trackPageView();
   }, [location.pathname, isAdminPage]);
 
+  // Handle visibility change (pause music when tab is hidden)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        if (isPlaying && audioRef.current && !audioRef.current.paused) {
+          isAutoPausedRef.current = true;
+          audioRef.current.pause();
+        }
+      } else {
+        if (isAutoPausedRef.current && audioRef.current) {
+          audioRef.current.play().catch(() => { });
+          isAutoPausedRef.current = false;
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isPlaying, audioRef]);
+
   return (
     <>
       {/* Skip to main content link for accessibility */}
@@ -93,8 +116,13 @@ function AppContent({ audioRef, isPlaying, setIsPlaying, hasStarted, setHasStart
           onPlay={() => {
             setIsPlaying(true);
             setHasStarted(true);
+            isAutoPausedRef.current = false;
           }}
-          onPause={() => setIsPlaying(false)}
+          onPause={() => {
+            if (!isAutoPausedRef.current) {
+              setIsPlaying(false);
+            }
+          }}
         />
       )}
 
